@@ -26,11 +26,17 @@ fun MainScreen() {
     val navController = rememberNavController()
     val items = listOf(Screen.Today, Screen.AddGoal, Screen.History)
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val currentScreen = items.find { it.route == currentRoute } ?: Screen.Today
+
     Scaffold(
+        topBar = {
+            GritlyTopBar(title = currentScreen.label)
+        },
         bottomBar = {
             NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
                 items.forEach { screen ->
                     NavigationBarItem(
                         icon = { Icon(screen.icon, contentDescription = screen.label) },
@@ -62,4 +68,14 @@ fun MainScreen() {
             composable(Screen.History.route) { HistoryScreen() }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GritlyTopBar(title: String) {
+    CenterAlignedTopAppBar(
+        title = { Text(title) },
+        navigationIcon = {},
+        actions = {}
+    )
 }
