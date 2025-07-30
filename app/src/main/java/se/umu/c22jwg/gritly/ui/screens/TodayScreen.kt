@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
@@ -37,7 +38,7 @@ fun TodayScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding( 8.dp)
                     .clickable {
                         goals = goals.map {
                             if (it.id == goal.id) it.copy(isDone = !it.isDone) else it
@@ -46,7 +47,13 @@ fun TodayScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(goal.title)
+                Text(text = goal.title,
+                    // Make the text have a line through if it is done
+                    style = if (goal.isDone) {
+                        LocalTextStyle.current.copy(textDecoration = TextDecoration.LineThrough)
+                    } else {
+                        LocalTextStyle.current
+                    })
                 Checkbox(
                     checked = goal.isDone,
                     onCheckedChange = { checked ->
