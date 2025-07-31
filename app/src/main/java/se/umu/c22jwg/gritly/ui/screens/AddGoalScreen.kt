@@ -29,17 +29,13 @@ import java.util.*
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
-import androidx.compose.material3.*
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoalScreen(
     modifier: Modifier = Modifier,
-    onPlanTomorrow: () -> Unit = {},
-    onPlanAnotherDay: (LocalDate) -> Unit = {}
 ) {
     var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1)) }
 
@@ -60,6 +56,13 @@ fun AddGoalScreen(
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     var taskName by rememberSaveable { mutableStateOf("") }
+
+    LaunchedEffect(selectedDate) {
+        val targetMonth = YearMonth.from(selectedDate)
+        if (state.firstVisibleMonth.yearMonth != targetMonth) {
+            state.animateScrollToMonth(targetMonth)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -285,6 +288,7 @@ private fun Day(
 ) {
     val today = LocalDate.now()
     val isSelectable = day.position == DayPosition.MonthDate && day.date.isAfter(today)
+    val isOutOfMonth = day.position == DayPosition.InDate || day.position == DayPosition.OutDate
 
     Box(
         modifier = Modifier
@@ -305,8 +309,9 @@ private fun Day(
             text = day.date.dayOfMonth.toString(),
             color = when {
                 isSelected -> MaterialTheme.colorScheme.primary
+                isOutOfMonth -> Color.Gray // Grey out in-month and out-of-month filler days
                 day.date.isAfter(today) -> MaterialTheme.colorScheme.onSurface
-                else -> Color.Gray // Previous days and today are grey
+                else -> Color.Gray // Today and previous days are grey
             },
             fontSize = 14.sp
         )

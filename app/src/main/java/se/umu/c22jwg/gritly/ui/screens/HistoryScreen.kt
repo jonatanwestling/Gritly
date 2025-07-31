@@ -5,5 +5,5 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun HistoryScreen() {
-    Text("Today's Goals")
+    Text("Previous days")
 }
