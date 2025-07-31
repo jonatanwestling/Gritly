@@ -46,6 +46,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation("androidx.compose.animation:animation:1.8.3")
+    // The compose calendar library for Android
+    implementation("com.kizitonwose.calendar:compose:2.6.2")
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
