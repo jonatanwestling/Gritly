@@ -3,100 +3,275 @@ package se.umu.c22jwg.gritly.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.core.CalendarDay
-import com.kizitonwose.calendar.core.DayPosition
-import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
+import com.kizitonwose.calendar.core.*
 import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.*
+import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 
+import androidx.compose.material3.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoalScreen(
     modifier: Modifier = Modifier,
     onPlanTomorrow: () -> Unit = {},
     onPlanAnotherDay: (LocalDate) -> Unit = {}
 ) {
-    // State for selected date
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1)) }
 
-    // Calendar configuration
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
     val endMonth = remember { currentMonth.plusMonths(100) }
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
+    val daysOfWeek = remember { daysOfWeek(firstDayOfWeek = firstDayOfWeek) }
     val state = rememberCalendarState(
         startMonth = startMonth,
         endMonth = endMonth,
         firstVisibleMonth = currentMonth,
         firstDayOfWeek = firstDayOfWeek
     )
+    val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Calendar
-        HorizontalCalendar(
-            state = state,
-            dayContent = { day ->
-                Day(
-                    day = day,
-                    isSelected = selectedDate == day.date,
-                    onClick = { selectedDate = it.date }
-                )
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
+    // Bottom sheet state
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var taskName by rememberSaveable { mutableStateOf("") }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Instructions
-        Text(
-            text = "Plan your goals for a day",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Buttons
-        Button(
-            onClick = {
-                onPlanTomorrow()
-                selectedDate = LocalDate.now().plusDays(1) // Select tomorrow
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Plan tomorrow")
+    Scaffold(
+        modifier = modifier,
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showBottomSheet = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Add Task")
+            }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = { selectedDate?.let { onPlanAnotherDay(it) } },
-            enabled = selectedDate != null,
-            modifier = Modifier.fillMaxWidth()
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Plan another day")
-        }
+            SimpleCalendarTitle(
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                currentMonth = state.firstVisibleMonth.yearMonth,
+                goToPrevious = {
+                    coroutineScope.launch {
+                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
+                    }
+                },
+                goToNext = {
+                    coroutineScope.launch {
+                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
+                    }
+                }
+            )
 
-        // Display selected date (optional, for feedback)
-        selectedDate?.let {
+            HorizontalCalendar(
+                state = state,
+                dayContent = { day ->
+                    Day(
+                        day = day,
+                        isSelected = selectedDate == day.date,
+                        onClick = { selectedDate = it.date }
+                    )
+                },
+                monthHeader = {
+                    MonthHeader(daysOfWeek = daysOfWeek)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            selectedDate.let {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Selected: $it",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "No goals planned yet",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+
+        // ModalBottomSheet is conditionally shown
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = sheetState
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text("Add New Task", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.height(8.dp))
+                    TextField(
+                        value = taskName,
+                        onValueChange = { taskName = it },
+                        label = { Text("Task name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                            }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    showBottomSheet = false
+                                    taskName = ""
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = taskName.isNotBlank()
+                    ) {
+                        Text("Add Task")
+                    }
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                showBottomSheet = true
+            }) {
+                Icon(Icons.Default.Add, contentDescription = "Add Task")
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            SimpleCalendarTitle(
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                currentMonth = state.firstVisibleMonth.yearMonth,
+                goToPrevious = {
+                    coroutineScope.launch {
+                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
+                    }
+                },
+                goToNext = {
+                    coroutineScope.launch {
+                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
+                    }
+                }
+            )
+
+            HorizontalCalendar(
+                state = state,
+                dayContent = { day ->
+                    Day(
+                        day = day,
+                        isSelected = selectedDate == day.date,
+                        onClick = { selectedDate = it.date }
+                    )
+                },
+                monthHeader = {
+                    MonthHeader(daysOfWeek = daysOfWeek)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            selectedDate?.let {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Selected: $it",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "No goals planned yet",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SimpleCalendarTitle(
+    modifier: Modifier = Modifier,
+    currentMonth: YearMonth,
+    goToPrevious: () -> Unit,
+    goToNext: () -> Unit
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = goToPrevious) {
+            Text("<", style = MaterialTheme.typography.titleMedium)
+        }
+        Text(
+            text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
+                    " ${currentMonth.year}",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        IconButton(onClick = goToNext) {
+            Text(">", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+private fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    ) {
+        for (dayOfWeek in daysOfWeek) {
             Text(
-                text = "Selected: $it",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                fontSize = 15.sp,
+                text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -108,15 +283,20 @@ private fun Day(
     isSelected: Boolean,
     onClick: (CalendarDay) -> Unit
 ) {
+    val today = LocalDate.now()
+    val isSelectable = day.position == DayPosition.MonthDate && day.date.isAfter(today)
+
     Box(
         modifier = Modifier
-            .aspectRatio(1f) // Square days
+            .aspectRatio(1f)
+            .padding(6.dp)
+            .clip(CircleShape)
             .background(
                 if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                 else Color.Transparent
             )
             .clickable(
-                enabled = day.position == DayPosition.MonthDate, // Only allow clicks on current month's days
+                enabled = isSelectable,
                 onClick = { onClick(day) }
             ),
         contentAlignment = Alignment.Center
@@ -125,9 +305,10 @@ private fun Day(
             text = day.date.dayOfMonth.toString(),
             color = when {
                 isSelected -> MaterialTheme.colorScheme.primary
-                day.position != DayPosition.MonthDate -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                else -> MaterialTheme.colorScheme.onSurface
-            }
+                day.date.isAfter(today) -> MaterialTheme.colorScheme.onSurface
+                else -> Color.Gray // Previous days and today are grey
+            },
+            fontSize = 14.sp
         )
     }
 }
