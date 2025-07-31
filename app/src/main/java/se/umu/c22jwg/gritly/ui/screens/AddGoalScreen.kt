@@ -167,72 +167,7 @@ fun AddGoalScreen(
             }
         }
     }
-
-    Scaffold(
-        modifier = modifier,
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                showBottomSheet = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .padding(paddingValues),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            SimpleCalendarTitle(
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
-                currentMonth = state.firstVisibleMonth.yearMonth,
-                goToPrevious = {
-                    coroutineScope.launch {
-                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
-                    }
-                },
-                goToNext = {
-                    coroutineScope.launch {
-                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
-                    }
-                }
-            )
-
-            HorizontalCalendar(
-                state = state,
-                dayContent = { day ->
-                    Day(
-                        day = day,
-                        isSelected = selectedDate == day.date,
-                        onClick = { selectedDate = it.date }
-                    )
-                },
-                monthHeader = {
-                    MonthHeader(daysOfWeek = daysOfWeek)
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            selectedDate?.let {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Selected: $it",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "No goals planned yet",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-    }
 }
-
 @Composable
 private fun SimpleCalendarTitle(
     modifier: Modifier = Modifier,
