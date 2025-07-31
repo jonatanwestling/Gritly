@@ -5,7 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -181,7 +187,12 @@ private fun SimpleCalendarTitle(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = goToPrevious) {
-            Text("<", style = MaterialTheme.typography.titleMedium)
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = "Back",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(24.dp)
+            )
         }
         Text(
             text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
@@ -190,7 +201,12 @@ private fun SimpleCalendarTitle(
             color = MaterialTheme.colorScheme.onSurface
         )
         IconButton(onClick = goToNext) {
-            Text(">", style = MaterialTheme.typography.titleMedium)
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Back",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
