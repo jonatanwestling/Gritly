@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +39,7 @@ fun TodayScreen() {
     }
 
     Column {
-        progressBar()
+        ProgressBar(goals)
 
         LazyColumn(
             modifier = Modifier
@@ -114,20 +115,31 @@ fun updateAndSortGoals(
 }
 
 @Composable
-fun progressBar() {
+fun ProgressBar(goals: List<GoalItem>) {
+    val completed = goals.count { it.isDone }
+    val total = goals.size
+    val progress = if (total > 0) completed / total.toFloat() else 0f
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp),
-            contentAlignment = Alignment.Center
+                .padding(16.dp)
         ) {
-            Text(text = "This is a card")
+            Text(text = "$completed/$total tasks completed")
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = ProgressIndicatorDefaults.linearColor,
+                trackColor = ProgressIndicatorDefaults.linearTrackColor,
+
+            )
         }
     }
 }
