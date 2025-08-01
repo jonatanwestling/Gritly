@@ -4,9 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
@@ -15,32 +19,62 @@ import androidx.compose.ui.unit.dp
 import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import se.umu.c22jwg.gritly.data.Task
+import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import java.time.LocalDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayScreen(taskViewModel: TaskViewModel) {
+fun TodayScreen(
+    taskViewModel: TaskViewModel,
+    modifier: Modifier = Modifier,
+    ) {
+
     val allTasks by taskViewModel.tasks.collectAsState()
     val today = LocalDate.now().toString()
     val todayTasks = allTasks.filter { it.date == today }
 
-    Column {
-        ProgressBar(todayTasks)
+    // Bottom sheet state
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            items(todayTasks, key = { it.id }) { task ->
-                TaskRow(
-                    task = task,
-                    modifier = Modifier.animateItem(),
-                    onToggle = {
-                        taskViewModel.toggleTaskCompletion(task)
-                    }
-                )
+    Scaffold(
+        modifier = modifier,
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showBottomSheet = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
         }
+    ) { paddingValues ->
+        Column (
+            modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+        ){
+            ProgressBar(todayTasks)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                items(todayTasks, key = { it.id }) { task ->
+                    TaskRow(
+                        task = task,
+                        modifier = Modifier.animateItem(),
+                        onToggle = {
+                            taskViewModel.toggleTaskCompletion(task)
+                        }
+                    )
+                }
+            }
+        }
+        
+        // AddTaskBottomSheet component
+        AddTaskBottomSheet(
+            showBottomSheet = showBottomSheet,
+            onDismiss = { showBottomSheet = false },
+            taskViewModel = taskViewModel,
+            title = "Add New Task For Today",
+            selectedDate = today
+        )
     }
 }
 

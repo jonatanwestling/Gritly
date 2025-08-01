@@ -7,14 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,9 +35,8 @@ import java.util.*
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import se.umu.c22jwg.gritly.data.Task
+import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,9 +60,7 @@ fun AddGoalScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // Bottom sheet state
-    val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
-    var taskName by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(selectedDate) {
         val targetMonth = YearMonth.from(selectedDate)
@@ -136,53 +129,14 @@ fun AddGoalScreen(
             }
         }
 
-        // ModalBottomSheet is conditionally shown
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                sheetState = sheetState
-            ) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text("Add New Task", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(8.dp))
-                    TextField(
-                        value = taskName,
-                        onValueChange = { taskName = it },
-                        label = { Text("Task name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            if (taskName.isNotBlank()) {
-                                taskViewModel.addTask(
-                                    title = taskName,
-                                    date = selectedDate.toString()
-                                )
-                                coroutineScope.launch {
-                                    sheetState.hide()
-                                }.invokeOnCompletion {
-                                    if (!sheetState.isVisible) {
-                                        showBottomSheet = false
-                                        taskName = ""
-                                    }
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = taskName.isNotBlank()
-                    ) {
-                        Text("Add Task")
-                    }
-                }
-            }
-        }
+        // AddTaskBottomSheet component
+        AddTaskBottomSheet(
+            showBottomSheet = showBottomSheet,
+            onDismiss = { showBottomSheet = false },
+            taskViewModel = taskViewModel,
+            title = "Add new task",
+            selectedDate = selectedDate.toString()
+        )
     }
 }
 @Composable
@@ -351,8 +305,6 @@ fun PlannedTaskRow(task: Task) {
 @Composable
 fun AddGoalScreenPreview() {
     GritlyTheme {
-        // Note: This preview won't work without a real database
-        // In a real app, you'd use a mock ViewModel for previews
         Text("AddGoalScreen Preview - Requires TaskViewModel")
     }
 }
