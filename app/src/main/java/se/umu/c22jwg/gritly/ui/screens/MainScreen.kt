@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.navigation.compose.NavHost
+import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Today : Screen("today", "Today", Icons.Default.Home)
@@ -22,7 +23,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(taskViewModel: TaskViewModel) {
     val navController = rememberNavController()
     val items = listOf(Screen.Today, Screen.AddGoal, Screen.History)
 
@@ -57,15 +58,15 @@ fun MainScreen() {
                 }
             }
         }
-    ) { innerPadding ->
+            ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = Screen.Today.route,
             Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Today.route) { TodayScreen() }
-            composable(Screen.AddGoal.route) { AddGoalScreen() }
-            composable(Screen.History.route) { HistoryScreen() }
+            composable(Screen.Today.route) { TodayScreen(taskViewModel) }
+            composable(Screen.AddGoal.route) { AddGoalScreen(taskViewModel) }
+            composable(Screen.History.route) { HistoryScreen(taskViewModel) }
         }
     }
 }

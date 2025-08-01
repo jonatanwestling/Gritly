@@ -3,6 +3,8 @@ package se.umu.c22jwg.gritly.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +31,7 @@ import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.*
 import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
+import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -37,10 +41,12 @@ import java.time.DayOfWeek
 
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
+import se.umu.c22jwg.gritly.data.Task
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoalScreen(
+    taskViewModel: TaskViewModel,
     modifier: Modifier = Modifier,
 ) {
     var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1)) }
@@ -117,17 +123,16 @@ fun AddGoalScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            selectedDate.let {
+            selectedDate.let { date ->
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Selected: $it",
+                    text = "Selected: $date",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Text(
-                    text = "No goals planned yet",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                
+                // Show planned tasks for selected date
+                PlannedTasksList(taskViewModel = taskViewModel, selectedDate = date.toString())
             }
         }
 
@@ -155,12 +160,18 @@ fun AddGoalScreen(
                     Spacer(Modifier.height(16.dp))
                     Button(
                         onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                            }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    showBottomSheet = false
-                                    taskName = ""
+                            if (taskName.isNotBlank()) {
+                                taskViewModel.addTask(
+                                    title = taskName,
+                                    date = selectedDate.toString()
+                                )
+                                coroutineScope.launch {
+                                    sheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                        taskName = ""
+                                    }
                                 }
                             }
                         },
@@ -269,10 +280,79 @@ private fun Day(
     }
 }
 
+@Composable
+fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
+    val allTasks by taskViewModel.tasks.collectAsState()
+    val plannedTasks = allTasks.filter { it.date == selectedDate }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = "Planned Tasks (${plannedTasks.size})",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        if (plannedTasks.isEmpty()) {
+            Text(
+                text = "No tasks planned for this date",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 200.dp)
+            ) {
+                items(plannedTasks, key = { it.id }) { task ->
+                    PlannedTaskRow(task = task)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PlannedTaskRow(task: Task) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = task.title,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            
+            if (task.isCompleted) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Completed",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun AddGoalScreenPreview() {
     GritlyTheme {
-        AddGoalScreen()
+        // Note: This preview won't work without a real database
+        // In a real app, you'd use a mock ViewModel for previews
+        Text("AddGoalScreen Preview - Requires TaskViewModel")
     }
 }
