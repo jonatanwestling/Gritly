@@ -3,6 +3,9 @@ package se.umu.c22jwg.gritly.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -11,6 +14,9 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,6 +43,7 @@ import java.time.DayOfWeek
 
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,8 +66,10 @@ fun AddGoalScreen(
     )
     val coroutineScope = rememberCoroutineScope()
 
-    // Bottom sheet state
+    // Bottom sheet states
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showCalendarSheet by remember { mutableStateOf(false) }
+    val calendarSheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(selectedDate) {
         val targetMonth = YearMonth.from(selectedDate)
@@ -84,49 +93,38 @@ fun AddGoalScreen(
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SimpleCalendarTitle(
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
-                currentMonth = state.firstVisibleMonth.yearMonth,
-                goToPrevious = {
-                    coroutineScope.launch {
-                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
-                    }
-                },
-                goToNext = {
-                    coroutineScope.launch {
-                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
-                    }
-                }
-            )
-
-            HorizontalCalendar(
-                state = state,
-                dayContent = { day ->
-                    Day(
-                        day = day,
-                        isSelected = selectedDate == day.date,
-                        onClick = { selectedDate = it.date }
+            // Calendar toggle button
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable { showCalendarSheet = true },
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Selected: ${selectedDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                },
-                monthHeader = {
-                    MonthHeader(daysOfWeek = daysOfWeek)
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Select date",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            selectedDate.let { date ->
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Selected: $date",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                
-                // Show planned tasks for selected date
-                PlannedTasksList(taskViewModel = taskViewModel, selectedDate = date.toString())
-            }
+            // Show planned tasks for selected date
+            PlannedTasksList(taskViewModel = taskViewModel, selectedDate = selectedDate.toString())
         }
 
         // AddTaskBottomSheet component
@@ -137,6 +135,67 @@ fun AddGoalScreen(
             title = "Add new task",
             selectedDate = selectedDate.toString()
         )
+
+        // Calendar BottomSheet
+        if (showCalendarSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showCalendarSheet = false },
+                sheetState = calendarSheetState
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        "Select Date",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    SimpleCalendarTitle(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        currentMonth = state.firstVisibleMonth.yearMonth,
+                        goToPrevious = {
+                            coroutineScope.launch {
+                                state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
+                            }
+                        },
+                        goToNext = {
+                            coroutineScope.launch {
+                                state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
+                            }
+                        }
+                    )
+
+                    HorizontalCalendar(
+                        state = state,
+                        dayContent = { day ->
+                            Day(
+                                day = day,
+                                isSelected = selectedDate == day.date,
+                                onClick = { 
+                                    selectedDate = it.date
+                                    coroutineScope.launch {
+                                        calendarSheetState.hide()
+                                    }.invokeOnCompletion {
+                                        if (!calendarSheetState.isVisible) {
+                                            showCalendarSheet = false
+                                        }
+                                    }
+                                }
+                            )
+                        },
+                        monthHeader = {
+                            MonthHeader(daysOfWeek = daysOfWeek)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
     }
 }
 @Composable
@@ -273,7 +332,7 @@ fun PlannedTaskRow(task: Task) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
