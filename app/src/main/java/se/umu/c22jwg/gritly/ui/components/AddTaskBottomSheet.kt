@@ -25,6 +25,9 @@ fun AddTaskBottomSheet(
     var taskName by rememberSaveable { mutableStateOf("") }
     var isRecurring by rememberSaveable { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    var weekDaysSelected by rememberSaveable {
+        mutableStateOf(List(7) { true}) // default 0000000
+    }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -71,6 +74,29 @@ fun AddTaskBottomSheet(
                         onCheckedChange = { isRecurring = it }
                     )
                 }
+                if (isRecurring) {
+                    Spacer(Modifier.height(16.dp))
+                    Text("Repeat on", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+                        for (i in 0..6) {
+                            val selected = weekDaysSelected[i]
+                            FilterChip(
+                                selected = selected,
+                                onClick = {
+                                    weekDaysSelected = weekDaysSelected.toMutableList().also {
+                                        it[i] = !it[i]
+                                    }
+                                },
+                                label = { Text(dayLabels[i]) }
+                            )
+                        }
+                    }
+                }
                 
                 Spacer(Modifier.height(32.dp))
                 Button(
@@ -101,7 +127,8 @@ fun AddTaskBottomSheet(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = taskName.isNotBlank()
+                    // only enable if user have provided a name and selected at least one day if recurring task
+                    enabled = taskName.isNotBlank() && ((weekDaysSelected.contains(true) && isRecurring) || !isRecurring)
                 ) {
                     Text("Add Task")
                 }
