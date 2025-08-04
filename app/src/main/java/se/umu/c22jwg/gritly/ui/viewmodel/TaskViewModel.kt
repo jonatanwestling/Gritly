@@ -14,6 +14,7 @@ import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.data.RecurringTaskDao
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.data.TaskDao
+import java.time.LocalDate
 
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -57,7 +58,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadTasks() {
         viewModelScope.launch {
             taskDao.getAllTasks().collect { taskList ->
-                // Sort tasks, incomplete first, then completed
                 val sortedTasks = taskList.sortedWith(
                     compareBy<Task> { it.isCompleted }
                         .thenByDescending { it.id }
@@ -66,10 +66,28 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 _todayTasks.value = sortedTasks.filter { !it.isCompleted }
                 _completedTasks.value = sortedTasks.filter { it.isCompleted }
             }
-            recurringTaskDao.getRecurringTasks().collect {
-                tasklist ->
+        }
 
+        viewModelScope.launch {
+            val today = LocalDate.now().toString()
+            recurringTaskDao.getRecurringTasks().collect { recurringTasks ->
+                for (recurring in recurringTasks) {
+                    val dayOfWeek = LocalDate.now().dayOfWeek.value // 1–7
+                    val shouldRepeat = ((recurring.weekDays shr (dayOfWeek - 1)) and 1) == 1
 
+                    if (shouldRepeat) {
+                        val existing = taskDao.getTaskByRecurringSource(today, recurring.id)
+                        if (existing == null) {
+                            val newTask = Task(
+                                title = recurring.title,
+                                date = today,
+                                isCompleted = false,
+                                sourceRecurringId = recurring.id
+                            )
+                            taskDao.insert(newTask)
+                        }
+                    }
+                }
             }
         }
     }

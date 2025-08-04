@@ -304,9 +304,9 @@ private fun Day(
 fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
     val allTasks by taskViewModel.tasks.collectAsState()
 
-    val plannedTasks = allTasks.filter { it.date == selectedDate }
+    val plannedTasks = allTasks.filter { it.date == selectedDate || it.sourceRecurringId != null}
 
-    Column(
+            Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)

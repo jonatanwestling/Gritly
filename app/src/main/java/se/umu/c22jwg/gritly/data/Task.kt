@@ -16,5 +16,8 @@ data class Task(
     val description: String? = null,
 
     @ColumnInfo(name = "is_completed")
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    // to keep track if it is a recurring task
+    @ColumnInfo(name = "source_recurring_id")
+    val sourceRecurringId: Long? = null
 )

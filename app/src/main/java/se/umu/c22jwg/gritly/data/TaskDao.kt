@@ -15,4 +15,7 @@ interface TaskDao {
 
     @Delete
     suspend fun delete(task: Task)
+
+    @Query("SELECT * FROM tasks WHERE date = :date AND source_recurring_id = :sourceId LIMIT 1")
+    suspend fun getTaskByRecurringSource(date: String, sourceId: Long): Task?
 }
