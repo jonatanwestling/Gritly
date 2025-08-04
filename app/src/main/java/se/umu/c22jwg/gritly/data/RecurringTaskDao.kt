@@ -1,4 +1,5 @@
 package se.umu.c22jwg.gritly.data
+import androidx.compose.runtime.snapshots.SnapshotId
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
@@ -15,4 +16,8 @@ interface RecurringTaskDao {
 
     @Delete
     suspend fun delete(task: RecurringTask)
+
+    @Query("DELETE FROM recurring_tasks WHERE id = :taskId")
+    suspend fun deleteWithId(taskId: Long)
+
 }

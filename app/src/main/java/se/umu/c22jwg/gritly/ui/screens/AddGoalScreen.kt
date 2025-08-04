@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -303,10 +304,10 @@ private fun Day(
 @Composable
 fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
     val allTasks by taskViewModel.tasks.collectAsState()
-
+    // Get the tasks of the date or the recurring ones
     val plannedTasks = allTasks.filter { it.date == selectedDate || it.sourceRecurringId != null}
 
-            Column(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
@@ -346,24 +347,38 @@ fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = task.title,
-                style = MaterialTheme.typography.bodyMedium,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
-            )
+            ) {
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+
+                if (task.sourceRecurringId != null) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Recurring task",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .padding(start = 8.dp)
+                    )
+                }
+            }
+
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Delete",
                 tint = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
                     .clickable {
-                        //Delete from planned tasks
-                        taskViewModel.deleteTask(task);
+                        taskViewModel.deleteTask(task)
                     }
-
             )
         }
     }

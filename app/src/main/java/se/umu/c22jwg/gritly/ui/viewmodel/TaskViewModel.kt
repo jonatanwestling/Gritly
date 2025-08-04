@@ -122,6 +122,9 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteTask(task: Task) {
         viewModelScope.launch {
+            if (task.sourceRecurringId != null) {
+                recurringTaskDao.deleteWithId(task.sourceRecurringId)
+            }
             taskDao.delete(task)
         }
     }
