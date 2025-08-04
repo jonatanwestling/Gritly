@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import se.umu.c22jwg.gritly.data.AppDatabase
+import se.umu.c22jwg.gritly.data.RecurringTask
+import se.umu.c22jwg.gritly.data.RecurringTaskDao
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.data.TaskDao
 
@@ -22,7 +24,9 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                     getApplication<Application>().applicationContext,
                     AppDatabase::class.java,
                     "gritly_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration(true)
+                    .build()
             }
             return db!!
         }
@@ -32,6 +36,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private val taskDao: TaskDao = database.taskDao()
+    private val recurringTaskDao: RecurringTaskDao = database.recurringTaskDao()
 
     init {
         loadTasks()
@@ -61,6 +66,11 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 _todayTasks.value = sortedTasks.filter { !it.isCompleted }
                 _completedTasks.value = sortedTasks.filter { it.isCompleted }
             }
+            recurringTaskDao.getRecurringTasks().collect {
+                tasklist ->
+
+
+            }
         }
     }
 
@@ -73,6 +83,16 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 isCompleted = false
             )
             taskDao.insert(task)
+        }
+    }
+
+    fun addRecurringTask(title: String, startDate: String, description: String? = null) {
+        viewModelScope.launch {
+            val task = RecurringTask(
+                title = title,
+                weekDays = 1111111
+            )
+            recurringTaskDao.insert(task)
         }
     }
 
@@ -98,4 +118,4 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun getTaskById(id: Long): Task? {
         return _tasks.value.find { it.id == id }
     }
-} 
+}

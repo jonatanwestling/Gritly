@@ -1,5 +1,7 @@
 package se.umu.c22jwg.gritly.ui.screens
 
+import android.R
+import android.media.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -24,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -120,6 +124,9 @@ fun AddGoalScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -296,8 +303,9 @@ private fun Day(
 @Composable
 fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
     val allTasks by taskViewModel.tasks.collectAsState()
+
     val plannedTasks = allTasks.filter { it.date == selectedDate }
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -307,8 +315,7 @@ fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
             text = "Planned Tasks (${plannedTasks.size})",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
+            )
         if (plannedTasks.isEmpty()) {
             Text(
                 text = "No tasks planned for this date",
@@ -320,7 +327,7 @@ fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
                 modifier = Modifier.heightIn(max = 200.dp)
             ) {
                 items(plannedTasks, key = { it.id }) { task ->
-                    PlannedTaskRow(task = task)
+                    PlannedTaskRow(task = task, taskViewModel)
                 }
             }
         }
@@ -328,7 +335,7 @@ fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
 }
 
 @Composable
-fun PlannedTaskRow(task: Task) {
+fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -347,15 +354,17 @@ fun PlannedTaskRow(task: Task) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f)
             )
-            
-            if (task.isCompleted) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Completed",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(24.dp)
+                    .clickable {
+                        //Delete from planned tasks
+                        taskViewModel.deleteTask(task);
+                    }
+
+            )
         }
     }
 }
