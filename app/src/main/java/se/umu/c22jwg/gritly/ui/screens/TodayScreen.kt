@@ -22,6 +22,15 @@ import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import java.time.LocalDate
 
+/**
+ * Composable function that displays the Today screen, showing active tasks for the current day
+ * and allowing users to add new tasks via the bottom sheet triggered by the FAB. The user can 
+ * see a progress bar indicating the completion status of today's tasks. As well as see the tasks
+ * that are left and the tasks that are completed in a list with checkboxes to toggle completion.
+ * 
+ * @param taskViewModel The ViewModel that provides the task data and handles task operations.
+ * @param modifier Modifier to be applied to the screen container.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(

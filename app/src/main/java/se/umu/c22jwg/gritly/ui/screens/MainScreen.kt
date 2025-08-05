@@ -16,6 +16,17 @@ import androidx.navigation.compose.*
 import androidx.navigation.compose.NavHost
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 
+/**
+ * MainScreen is the primary navigation container for the Gritly app
+ * It provides a bottom navigation bar with three screens:
+ * - Today: Displays today's tasks
+ * - AddGoal: Allows users to add new tasks
+ * - History: Shows the history of completed tasks
+ * 
+ * @param taskViewModel The ViewModel that provides the task data and handles task operations.
+ */
+
+ // Represents the different screens in the app with their respective routes, labels, and icons.
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Today : Screen("today", "Today", Icons.Default.Home)
     object AddGoal : Screen("add_goal", "Plan", Icons.Default.DateRange)
@@ -37,6 +48,7 @@ fun MainScreen(taskViewModel: TaskViewModel) {
             GritlyTopBar(title = currentScreen.label)
         },
         bottomBar = {
+            // The NavigationBar is the bottom navigation bar that allows users to switch between different screens.
             NavigationBar {
                 items.forEach { screen ->
                     NavigationBarItem(
@@ -59,6 +71,7 @@ fun MainScreen(taskViewModel: TaskViewModel) {
             }
         }
             ) { innerPadding ->
+                // The NavHost is the main content area that displays the current screen based on the navigation state.
         NavHost(
             navController = navController,
             startDestination = Screen.Today.route,
@@ -71,6 +84,12 @@ fun MainScreen(taskViewModel: TaskViewModel) {
     }
 }
 
+/**
+ * GritlyTopBar is a top app bar that displays the title of the current screen.
+ * It is used in the MainScreen to provide a consistent header across different screens.
+ * 
+ * @param title The title to be displayed in the top bar.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GritlyTopBar(title: String) {
