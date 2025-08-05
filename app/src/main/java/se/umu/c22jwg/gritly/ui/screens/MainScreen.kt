@@ -28,7 +28,7 @@ import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 
  // Represents the different screens in the app with their respective routes, labels, and icons.
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    object Today : Screen("today", "Today", Icons.Default.Home)
+    object Today : Screen("today", "Gritly", Icons.Default.Home)
     object AddGoal : Screen("add_goal", "Plan", Icons.Default.DateRange)
     object History : Screen("history", "History", Icons.Default.Refresh)
 }
