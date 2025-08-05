@@ -131,6 +131,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun loadAllTasks() {
         viewModelScope.launch {
+            val today = LocalDate.now().toString()
+
             taskDao.getAllTasks().collect { taskList ->
                 val sortedTasks = taskList.sortedWith(
                     compareBy<Task> { it.isCompleted }
@@ -138,6 +140,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 _allTasks.value = sortedTasks
                 _completedTasks.value = sortedTasks.filter { it.isCompleted }
+                _todayTasks.value = sortedTasks.filter { it.date ==  today}
             }
         }
     }
@@ -153,12 +156,14 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             // create normal tasks from recurring tasks so they can be marked as completed
             // and behaves as a normal task.
             createTasksFromRecurringTasks(today)
-            
-            // load tasks for today 
+
             taskDao.getAllTasks().collect { taskList ->
-                val todayTasks = taskList.filter { 
-                    it.date == today && !it.isCompleted 
-                }.sortedByDescending { it.id }
+                val todayTasks = taskList
+                    .filter { it.date == today }
+                    .sortedWith(
+                        compareBy<Task> { it.isCompleted }
+                            .thenByDescending { it.id }
+                    )
                 _todayTasks.value = todayTasks
             }
         }
