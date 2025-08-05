@@ -29,7 +29,7 @@ fun TodayScreen(
     modifier: Modifier = Modifier,
     ) {
 
-    val allTasks by taskViewModel.tasks.collectAsState()
+    val allTasks by taskViewModel.allTasks.collectAsState()
     val today = LocalDate.now().toString()
     val todayTasks = allTasks.filter { it.date == today }
 
