@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
 import se.umu.c22jwg.gritly.data.Task
+import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import java.time.format.DateTimeFormatter
 
@@ -76,6 +77,7 @@ fun AddGoalScreen(
     var showCalendarSheet by remember { mutableStateOf(false) }
     val calendarSheetState = rememberModalBottomSheetState()
 
+    // Scroll to the selected 
     LaunchedEffect(selectedDate) {
         val targetMonth = YearMonth.from(selectedDate)
         if (state.firstVisibleMonth.yearMonth != targetMonth) {
@@ -125,16 +127,10 @@ fun AddGoalScreen(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Show planned tasks for selected date
-            PlannedTasksList(taskViewModel = taskViewModel, selectedDate = selectedDate.toString())
+            // Show planned recurring tasks and normal tasks for selected date
+            UnifiedPlannedTasksList(taskViewModel = taskViewModel, selectedDate = selectedDate.toString())
         }
-
         // AddTaskBottomSheet component
         AddTaskBottomSheet(
             showBottomSheet = showBottomSheet,
@@ -143,7 +139,6 @@ fun AddGoalScreen(
             title = "Add new task",
             selectedDate = selectedDate.toString()
         )
-
         // Calendar BottomSheet
         if (showCalendarSheet) {
             ModalBottomSheet(
@@ -160,7 +155,7 @@ fun AddGoalScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
-                    
+                    // Header title with nav buttons for the calendar 
                     SimpleCalendarTitle(
                         modifier = Modifier.padding(horizontal = 8.dp),
                         currentMonth = state.firstVisibleMonth.yearMonth,
@@ -175,7 +170,7 @@ fun AddGoalScreen(
                             }
                         }
                     )
-
+                    // Horizontal calendar provided by the Calendar open source library
                     HorizontalCalendar(
                         state = state,
                         dayContent = { day ->
@@ -206,6 +201,16 @@ fun AddGoalScreen(
         }
     }
 }
+
+/**
+ * Simple calendar title with nav buttons for the calendar,
+ * and the current month and year. This is used in the calendar bottom sheet.
+ *
+ * @param modifier Modifier for the calendar title
+ * @param currentMonth The current month and year
+ * @param goToPrevious Function to go to the previous month
+ * @param goToNext Function to go to the next month
+ */
 @Composable
 private fun SimpleCalendarTitle(
     modifier: Modifier = Modifier,
@@ -226,6 +231,7 @@ private fun SimpleCalendarTitle(
                 modifier = Modifier.size(24.dp)
             )
         }
+        // month in the middle
         Text(
             text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
                     " ${currentMonth.year}",
@@ -243,6 +249,12 @@ private fun SimpleCalendarTitle(
     }
 }
 
+/**
+ * Function to display the name of the days of the week in the calendar header.
+ * This is used in the calendar bottom sheet. 
+ *
+ * @param daysOfWeek The days of the week
+ */
 @Composable
 private fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
     Row(
@@ -263,6 +275,15 @@ private fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
     }
 }
 
+
+/**
+ * Function to display the days of the month in the calendar.
+ * This is used in the calendar bottom sheet. And the code is provided by the Calendar open source library.
+ *
+ * @param day The day to display
+ * @param isSelected Whether the day is selected
+ * @param onClick Function to call when the day is clicked
+ */
 @Composable
 private fun Day(
     day: CalendarDay,
@@ -301,23 +322,41 @@ private fun Day(
     }
 }
 
+/**
+ * Displays the planned tasks for a specific date. It displays both normal tasks and recurring tasks.
+ * It combines the tasks into a unified list, where each item is either a Task or a RecurringTask.
+ * 
+ * @param taskViewModel The ViewModel that provides access to tasks
+ * @param selectedDate The date for which to display planned tasks, formatted as "yyyy-MM-dd"
+ */
 @Composable
-fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
-    val allTasks by taskViewModel.tasks.collectAsState()
-    // Get the tasks of the date or the recurring ones
-    val plannedTasks = allTasks.filter { it.date == selectedDate || it.sourceRecurringId != null}
+fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
+    // Collect all tasks from the ViewModel
+    val allTasks by taskViewModel.allTasks.collectAsState()
+    // Filter tasks for the selected date
+    val plannedTasks = allTasks.filter { it.date == selectedDate }
+    // Collect recurring tasks for the selected date
+    val recurringTaskIdsInTasks = plannedTasks.mapNotNull { it.sourceRecurringId }.toSet()
+    // Get recurring tasks that are planned for the selected date
+    val plannedRecurringTasks = taskViewModel.getRecurringTasksForDate(selectedDate)
+        .filter { it.id !in recurringTaskIdsInTasks }
+
+    // Build unified list as pairs
+    val unifiedList: List<Pair<Task?, RecurringTask?>> =
+        plannedTasks.map { it to null } + plannedRecurringTasks.map { null to it }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
+        // title and count of planned tasks
         Text(
-            text = "Planned Tasks (${plannedTasks.size})",
+            text = "Planned Tasks (${unifiedList.size})",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
-            )
-        if (plannedTasks.isEmpty()) {
+        )
+        if (unifiedList.isEmpty()) {
             Text(
                 text = "No tasks planned for this date",
                 style = MaterialTheme.typography.bodyMedium,
@@ -325,16 +364,27 @@ fun PlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
             )
         } else {
             LazyColumn(
-                modifier = Modifier.heightIn(max = 200.dp)
+                modifier = Modifier.fillMaxSize(),
             ) {
-                items(plannedTasks, key = { it.id }) { task ->
-                    PlannedTaskRow(task = task, taskViewModel)
+                items(unifiedList) { (task, recurringTask) ->
+                    if (task != null) {
+                        PlannedTaskRow(task, taskViewModel)
+                    } else if (recurringTask != null) {
+                        PlannedRecurringTaskRow(recurringTask, taskViewModel)
+                    }
                 }
             }
         }
     }
 }
 
+/**
+ * Displays a row for a planned task. It includes the task title, an icon for recurring tasks,
+ * and a delete icon to remove the task.
+ *
+ * @param task The Task object to display
+ * @param taskViewModel The ViewModel that provides access to tasks
+ */
 @Composable
 fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
     Card(
@@ -369,7 +419,6 @@ fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
                     )
                 }
             }
-
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Delete",
@@ -383,11 +432,66 @@ fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
         }
     }
 }
+/**
+ * Displays a row for a planned recurring task. It includes the task title, an icon for recurring tasks,
+ * and a delete icon to remove the task.
+ *
+ * @param recurringTask The RecurringTask object to display
+ * @param taskViewModel The ViewModel that provides access to tasks
+ */
+@Composable
+fun PlannedRecurringTaskRow(recurringTask: RecurringTask, taskViewModel: TaskViewModel) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Recurring task",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(end = 8.dp)
+            )
+            Text(
+                text = recurringTask.title,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+        }
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        taskViewModel.deleteTaskFromId(recurringTask.id)
+                    }
+            )
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
 fun AddGoalScreenPreview() {
     GritlyTheme {
-        Text("AddGoalScreen Preview - Requires TaskViewModel")
+        Text("Hey")
     }
 }
