@@ -331,20 +331,12 @@ private fun Day(
  */
 @Composable
 fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
-    // Collect all tasks from the ViewModel
-    val allTasks by taskViewModel.allTasks.collectAsState()
-    val recurringTasks by taskViewModel.recurringTasks.collectAsState()
-    // Filter tasks for the selected date
-    val plannedTasks = allTasks.filter { it.date == selectedDate }
-    // Collect recurring tasks for the selected date
-    val recurringTaskIdsInTasks = plannedTasks.mapNotNull { it.sourceRecurringId }.toSet()
-    // Get recurring tasks that are planned for the selected date
-    val plannedRecurringTasks = taskViewModel.getRecurringTasksForDate(selectedDate, recurringTasks)
-        .filter { it.id !in recurringTaskIdsInTasks }
-
-    // Build unified list as pairs
-    val unifiedList: List<Pair<Task?, RecurringTask?>> =
-        plannedTasks.map { it to null } + plannedRecurringTasks.map { null to it }
+    // Tell the ViewModel about the selected date
+    LaunchedEffect(selectedDate) {
+        taskViewModel.setSelectedDate(selectedDate)
+    }
+    // Collect the planned tasks from the ViewModel
+    val plannedTasks by taskViewModel.plannedTasks.collectAsState()
 
     Column(
         modifier = Modifier
@@ -353,11 +345,11 @@ fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) 
     ) {
         // title and count of planned tasks
         Text(
-            text = "Planned Tasks (${unifiedList.size})",
+            text = "Planned Tasks (${plannedTasks.size})",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        if (unifiedList.isEmpty()) {
+        if (plannedTasks.isEmpty()) {
             Text(
                 text = "No tasks planned for this date",
                 style = MaterialTheme.typography.bodyMedium,
@@ -367,7 +359,7 @@ fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(unifiedList) { (task, recurringTask) ->
+                items(plannedTasks) { (task, recurringTask) ->
                     if (task != null) {
                         PlannedTaskRow(task, taskViewModel)
                     } else if (recurringTask != null) {
