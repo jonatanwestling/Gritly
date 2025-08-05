@@ -253,13 +253,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      * Gets recurring tasks that are planned for a specific date
      * This does NOT create new Task entries, just returns which recurring tasks are scheduled
      */
-    fun getRecurringTasksForDate(date: String): List<RecurringTask> {
+    fun getRecurringTasksForDate(date: String, recurringTasks: List<RecurringTask>): List<RecurringTask> {
         val targetDate = LocalDate.parse(date)
         val dayOfWeek = targetDate.dayOfWeek.value // 1 = Monday, ..., 7 = Sunday
         val bitIndex = 7 - dayOfWeek // Map Monday=6, Sunday=0
-        
-        return _recurringTasks.value.filter { recurringTask ->
-            ((recurringTask.weekDays shr bitIndex) and 1) == 1
-        }
+        return recurringTasks.filter { ((it.weekDays shr bitIndex) and 1) == 1 }
     }
 }

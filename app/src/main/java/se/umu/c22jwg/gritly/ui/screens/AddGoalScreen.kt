@@ -333,12 +333,13 @@ private fun Day(
 fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
     // Collect all tasks from the ViewModel
     val allTasks by taskViewModel.allTasks.collectAsState()
+    val recurringTasks by taskViewModel.recurringTasks.collectAsState()
     // Filter tasks for the selected date
     val plannedTasks = allTasks.filter { it.date == selectedDate }
     // Collect recurring tasks for the selected date
     val recurringTaskIdsInTasks = plannedTasks.mapNotNull { it.sourceRecurringId }.toSet()
     // Get recurring tasks that are planned for the selected date
-    val plannedRecurringTasks = taskViewModel.getRecurringTasksForDate(selectedDate)
+    val plannedRecurringTasks = taskViewModel.getRecurringTasksForDate(selectedDate, recurringTasks)
         .filter { it.id !in recurringTaskIdsInTasks }
 
     // Build unified list as pairs
