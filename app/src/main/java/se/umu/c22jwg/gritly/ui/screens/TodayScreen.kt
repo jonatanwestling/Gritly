@@ -1,9 +1,11 @@
 package se.umu.c22jwg.gritly.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -39,6 +41,7 @@ import java.time.LocalTime
  * @param taskViewModel The ViewModel that provides the task data and handles task operations.
  * @param modifier Modifier to be applied to the screen container.
  */
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
@@ -48,10 +51,13 @@ fun TodayScreen(
 
     val allTasks by taskViewModel.allTasks.collectAsState()
     val today = LocalDate.now().toString()
-    val todayTasks = allTasks.filter { it.date == today }
+    val todayTasks by taskViewModel.todayTasks.collectAsState()
+    val listState = rememberLazyListState()
+    var scrollToTop by remember { mutableStateOf(false) }
 
     // Bottom sheet state
     var showBottomSheet by remember { mutableStateOf(false) }
+
 
     Scaffold(
         modifier = modifier,
@@ -60,31 +66,41 @@ fun TodayScreen(
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
         }
-    ) { paddingValues ->
+    ) {
         Column (
             modifier = Modifier
             .fillMaxSize()
-
         ){
 
             ProgressBar(todayTasks)
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp),
+                state = listState
             ) {
                 items(todayTasks, key = { it.id }) { task ->
                     TaskRow(
                         task = task,
                         modifier = Modifier.animateItem(),
                         onToggle = {
+
+                                scrollToTop = true
+
                             taskViewModel.toggleTaskCompletion(task)
                         }
                     )
                 }
             }
+            // Scroll to top after list updates when a task is marked as done
+            LaunchedEffect(todayTasks) {
+                if (scrollToTop) {
+                    listState.animateScrollToItem(0)
+                    scrollToTop = false
+                }
+            }
         }
-        
+
         // AddTaskBottomSheet component
         AddTaskBottomSheet(
             showBottomSheet = showBottomSheet,
@@ -148,7 +164,7 @@ fun ProgressBar(tasks: List<Task>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
