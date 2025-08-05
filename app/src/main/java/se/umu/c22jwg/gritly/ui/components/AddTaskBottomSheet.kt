@@ -106,7 +106,7 @@ fun AddTaskBottomSheet(
                                 // Add recurring task for multiple days
                                 taskViewModel.addRecurringTask(
                                     title = taskName,
-                                    startDate = selectedDate
+                                    days = weekDaysSelected
                                 )
                             } else {
                                 // Add single task
