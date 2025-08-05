@@ -75,7 +75,9 @@ fun AddGoalScreen(
     // Bottom sheet states
     var showBottomSheet by remember { mutableStateOf(false) }
     var showCalendarSheet by remember { mutableStateOf(false) }
-    val calendarSheetState = rememberModalBottomSheetState()
+    val calendarSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     // Scroll to the selected 
     LaunchedEffect(selectedDate) {
