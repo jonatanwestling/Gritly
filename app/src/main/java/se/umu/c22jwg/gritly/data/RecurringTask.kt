@@ -11,8 +11,7 @@ data class RecurringTask(
 
     val title: String,
 
-    //Days with this format: everyday: 1111111, mondays: 1000000,
-    // mondays and fridays: 1000100
+    // Each bit represents a day: Sun=bit 6, Mon=bit 5, ..., Sat=bit 0
     @ColumnInfo(name = "week_days")
-    val weekDays: Int,
+    val weekDays: Int
 )
