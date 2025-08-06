@@ -240,13 +240,7 @@ fun TimeLeftInDayCounter() {
     val minutes = (secondsLeft % 3600) / 60
     val seconds = secondsLeft % 60
 
-    Card(
-        modifier = Modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -260,7 +254,6 @@ fun TimeLeftInDayCounter() {
             )
         }
     }
-}
 
 @Preview(showBackground = true)
 @Composable
