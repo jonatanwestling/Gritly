@@ -7,7 +7,7 @@ import java.time.LocalDate
 
 @Entity(tableName = "daily_entry")
 data class DailyEntry(
-    @PrimaryKey val date: LocalDate,
+    @PrimaryKey val date: String,
     val note: String,
     val imagePath: String
 )
