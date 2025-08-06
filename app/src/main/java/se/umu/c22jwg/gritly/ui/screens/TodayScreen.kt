@@ -232,7 +232,7 @@ fun ProgressBar(tasks: List<Task>, picture: MutableState<Bitmap>, pictureViewMod
                         Box {
                             if (text.isEmpty()) {
                                 Text(
-                                    text = "Enter your notes here...",
+                                    text = "Enter notes and take a photo here...",
                                     color = Color.Gray
                                 )
                             }
