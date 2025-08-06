@@ -33,6 +33,19 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
         }
     )
 
+    private var takePictureLauncher: (() -> Unit)? = null
+
+    fun setTakePictureLauncher(launcher: () -> Unit) {
+        takePictureLauncher = launcher
+    }
+
+    fun takePicture() {
+        takePictureLauncher?.invoke()
+    }
+    fun hasPicture(): Boolean {
+        return file.exists() && file.length() > 0
+    }
+
     private fun rotatedBitmap(file: File): Bitmap {
         var bm = BitmapFactory.decodeFile(file.absolutePath)
         val orientation = getExifRotation(file)
@@ -55,6 +68,15 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
             }
         } catch (e: IOException) {
             0
+        }
+    }
+
+    // Call this to remove the photo file and reset the state
+    fun clearImage() {
+        file.let {
+            if (it.exists()) {
+                it.delete()
+            }
         }
     }
 }

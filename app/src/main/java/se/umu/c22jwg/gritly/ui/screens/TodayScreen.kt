@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.FloatingActionButton
@@ -56,8 +58,7 @@ import java.time.LocalTime
 @Composable
 fun TodayScreen(
     taskViewModel: TaskViewModel,
-    picture: MutableState<Bitmap>,
-    handler: ()-> Unit,
+    pictureViewModel: PictureViewModel,
     modifier: Modifier = Modifier,
     ) {
 
@@ -78,7 +79,7 @@ fun TodayScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.End
             ) {
-                FloatingActionButton(onClick = handler) {
+                FloatingActionButton({ pictureViewModel.clearImage() }) {
                     Icon(Icons.Filled.Delete, contentDescription = "Take Picture")
                 }
                 FloatingActionButton(onClick = { showBottomSheet = true }) {
@@ -92,7 +93,7 @@ fun TodayScreen(
             .fillMaxSize()
         ){
 
-            ProgressBar(todayTasks, picture)
+            ProgressBar(todayTasks, pictureViewModel.bitmap, pictureViewModel)
 
 
 
@@ -178,7 +179,7 @@ fun TaskRow(
 
 
 @Composable
-fun ProgressBar(tasks: List<Task>, picture: MutableState<Bitmap>) {
+fun ProgressBar(tasks: List<Task>, picture: MutableState<Bitmap>, pictureViewModel: PictureViewModel) {
     val completed = tasks.count { it.isCompleted }
     val total = tasks.size
     val progress = if (total > 0) completed / total.toFloat() else 0f
@@ -242,16 +243,25 @@ fun ProgressBar(tasks: List<Task>, picture: MutableState<Bitmap>) {
 
                 Spacer(modifier = Modifier.width(8.dp)) // Optional spacing
 
-                if ( picture.value != null) {
+                if (pictureViewModel.hasPicture()) {
                     Image(
-                        bitmap = picture.value.asImageBitmap(),
+                        bitmap = pictureViewModel.bitmap.value.asImageBitmap(),
                         contentDescription = "Captured Image",
                         modifier = Modifier
-                            .size(64.dp) // Choose a size that fits well
+                            .size(64.dp)
                             .padding(4.dp)
                             .clip(RoundedCornerShape(12.dp)),
                         contentScale = ContentScale.Crop
                     )
+                } else {
+                    Button(
+                        onClick = { pictureViewModel.takePicture() },
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .height(64.dp)
+                    ) {
+                        Icon(Icons.Filled.CameraAlt, contentDescription = "Take Photo")
+                    }
                 }
             }
 

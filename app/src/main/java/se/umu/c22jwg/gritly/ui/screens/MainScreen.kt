@@ -36,7 +36,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 }
 
 @Composable
-fun MainScreen(taskViewModel: TaskViewModel, picture: MutableState<Bitmap>, handler: ()-> Unit) {
+fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel) {
     val navController = rememberNavController()
     val items = listOf(Screen.Today, Screen.AddGoal, Screen.History)
 
@@ -79,7 +79,7 @@ fun MainScreen(taskViewModel: TaskViewModel, picture: MutableState<Bitmap>, hand
             startDestination = Screen.Today.route,
             Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Today.route) { TodayScreen(taskViewModel, picture, handler ) }
+            composable(Screen.Today.route) { TodayScreen(taskViewModel, pictureViewModel ) }
             composable(Screen.AddGoal.route) { AddGoalScreen(taskViewModel) }
             composable(Screen.History.route) { HistoryScreen(taskViewModel) }
         }

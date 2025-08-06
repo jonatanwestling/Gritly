@@ -37,10 +37,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         enableEdgeToEdge()
+
+        // Inform ViewModel how to launch the camera
+        viewModel.setTakePictureLauncher {
+            // Compose the URI from the file inside the ViewModel
+            val uri = FileProvider.getUriForFile(
+                applicationContext,
+                "$packageName.fileprovider",
+                viewModel.file
+            )
+            launcher.launch(uri)
+        }
+
         setContent {
             GritlyTheme {
                 val taskViewModel: TaskViewModel = viewModel()
-                MainScreen(taskViewModel = taskViewModel, viewModel.bitmap, this::takePicture)
+                MainScreen(taskViewModel = taskViewModel, pictureViewModel = viewModel)
             }
         }
 
