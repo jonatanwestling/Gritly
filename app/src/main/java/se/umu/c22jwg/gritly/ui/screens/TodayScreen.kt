@@ -1,22 +1,31 @@
 package se.umu.c22jwg.gritly.ui.screens
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.os.Handler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
@@ -29,6 +38,7 @@ import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import java.time.LocalDate
 import kotlinx.coroutines.delay
 import org.intellij.lang.annotations.JdkConstants
+import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
 import java.time.Duration
 import java.time.LocalTime
 
@@ -46,6 +56,8 @@ import java.time.LocalTime
 @Composable
 fun TodayScreen(
     taskViewModel: TaskViewModel,
+    picture: MutableState<Bitmap>,
+    handler: ()-> Unit,
     modifier: Modifier = Modifier,
     ) {
 
@@ -62,8 +74,16 @@ fun TodayScreen(
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(onClick = { showBottomSheet = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                FloatingActionButton(onClick = handler) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Take Picture")
+                }
+                FloatingActionButton(onClick = { showBottomSheet = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Task")
+                }
             }
         }
     ) {
@@ -72,7 +92,10 @@ fun TodayScreen(
             .fillMaxSize()
         ){
 
-            ProgressBar(todayTasks)
+            ProgressBar(todayTasks, picture)
+
+
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -155,7 +178,7 @@ fun TaskRow(
 
 
 @Composable
-fun ProgressBar(tasks: List<Task>) {
+fun ProgressBar(tasks: List<Task>, picture: MutableState<Bitmap>) {
     val completed = tasks.count { it.isCompleted }
     val total = tasks.size
     val progress = if (total > 0) completed / total.toFloat() else 0f
@@ -193,30 +216,45 @@ fun ProgressBar(tasks: List<Task>) {
 
             // Spacer for visual breathing room
             Spacer(modifier = Modifier.height(16.dp))
-
-            BasicTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = 16.sp),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        if (text.isEmpty()) {
-                            Text(
-                                text = "Enter your notes here...",
-                                color = Color.Gray
-
-                            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BasicTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 16.sp),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (text.isEmpty()) {
+                                Text(
+                                    text = "Enter your notes here...",
+                                    color = Color.Gray
+                                )
+                            }
+                            innerTextField()
                         }
-                        innerTextField()
                     }
+                )
+
+                Spacer(modifier = Modifier.width(8.dp)) // Optional spacing
+
+                if ( picture.value != null) {
+                    Image(
+                        bitmap = picture.value.asImageBitmap(),
+                        contentDescription = "Captured Image",
+                        modifier = Modifier
+                            .size(64.dp) // Choose a size that fits well
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
                 }
-            )
+            }
+
         }
     }
 }

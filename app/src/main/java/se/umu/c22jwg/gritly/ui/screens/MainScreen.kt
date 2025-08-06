@@ -1,5 +1,6 @@
 package se.umu.c22jwg.gritly.ui.screens
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.navigation.compose.NavHost
+import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 
 /**
@@ -34,7 +36,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 }
 
 @Composable
-fun MainScreen(taskViewModel: TaskViewModel) {
+fun MainScreen(taskViewModel: TaskViewModel, picture: MutableState<Bitmap>, handler: ()-> Unit) {
     val navController = rememberNavController()
     val items = listOf(Screen.Today, Screen.AddGoal, Screen.History)
 
@@ -77,7 +79,7 @@ fun MainScreen(taskViewModel: TaskViewModel) {
             startDestination = Screen.Today.route,
             Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Today.route) { TodayScreen(taskViewModel) }
+            composable(Screen.Today.route) { TodayScreen(taskViewModel, picture, handler ) }
             composable(Screen.AddGoal.route) { AddGoalScreen(taskViewModel) }
             composable(Screen.History.route) { HistoryScreen(taskViewModel) }
         }
