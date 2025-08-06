@@ -64,6 +64,7 @@ dependencies {
     // The compose calendar library for Android
     implementation("com.kizitonwose.calendar:compose:2.6.2")
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("androidx.compose.material:material-icons-extended:1.4.3")
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
