@@ -162,6 +162,10 @@ fun TaskRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Checkbox(
+            checked = task.isCompleted,
+            onCheckedChange = { onToggle() }
+        )
         Text(
             text = task.title,
             modifier = Modifier
@@ -172,10 +176,6 @@ fun TaskRow(
             } else {
                 LocalTextStyle.current
             }
-        )
-        Checkbox(
-            checked = task.isCompleted,
-            onCheckedChange = { onToggle() }
         )
     }
 }
