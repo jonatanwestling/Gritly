@@ -16,10 +16,13 @@ import kotlinx.coroutines.launch
 import se.umu.c22jwg.gritly.data.AppDatabase
 import se.umu.c22jwg.gritly.data.DailyEntry
 import se.umu.c22jwg.gritly.data.DailyEntryDao
+import se.umu.c22jwg.gritly.data.DailyEntryRepository
+import se.umu.c22jwg.gritly.data.DatabaseProvider
 import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.data.RecurringTaskDao
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.data.TaskDao
+import se.umu.c22jwg.gritly.data.TaskRepository
 import java.time.LocalDate
 
 /**
@@ -40,36 +43,13 @@ import java.time.LocalDate
  */
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
-    /**
-     * Singleton instance of the AppDatabase. 
-     * Using Room's databaseBuilder to create the database with a fallback to destructive migration.
-     */
-    private val database: AppDatabase
-        get() {
-            if (db == null) {
-                db = Room.databaseBuilder(
-                    getApplication<Application>().applicationContext,
-                    AppDatabase::class.java,
-                    "gritly_database"
-                )
-                    .fallbackToDestructiveMigration(true)
-                    .build()
-            }
-            return db!!
-        }
-    /**
-     * Singleton instance of the AppDatabase.
-     * This ensures that the database is created only once and reused across the application.
-     */
-    companion object {
-        private var db: AppDatabase? = null
-    }
+    private val database = DatabaseProvider.getDatabase(application)
     /**
      * DAOs for accessing Task and RecurringTask data from the database.
      */
-    private val taskDao: TaskDao = database.taskDao()
-    private val recurringTaskDao: RecurringTaskDao = database.recurringTaskDao()
-    private val dailyEntryDao: DailyEntryDao = database.dailyEntryDao()
+    private val taskRepository = TaskRepository(database.taskDao(), database.recurringTaskDao())
+    private val dailyEntryRepository = DailyEntryRepository(database.dailyEntryDao())
+
 
     /**
      * Constructor that loads the initials data.
@@ -136,7 +116,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val today = LocalDate.now().toString()
 
-            taskDao.getAllTasks().collect { taskList ->
+            taskRepository.getAllTasks.collect { taskList ->
                 val sortedTasks = taskList.sortedWith(
                     compareBy<Task> { it.isCompleted }
                         .thenByDescending { it.id }
@@ -160,7 +140,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             // and behaves as a normal task.
             createTasksFromRecurringTasks(today)
 
-            taskDao.getAllTasks().collect { taskList ->
+            // Flow ist for function
+            taskRepository.getAllTasks.collect { taskList ->
                 val todayTasks = taskList
                     .filter { it.date == today }
                     .sortedWith(
@@ -177,7 +158,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun loadRecurringTasks() {
         viewModelScope.launch {
-            recurringTaskDao.getRecurringTasks().collect { recurringTaskList ->
+            taskRepository.recurringTasks.collect { recurringTaskList ->
                 _recurringTasks.value = recurringTaskList
             }
         }
@@ -192,14 +173,14 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         // get the bit index for the day of the week
         val bitIndex = 7 - dayOfWeek 
 
-        recurringTaskDao.getRecurringTasks().collect { recurringTasks ->
+        taskRepository.recurringTasks.collect { recurringTasks ->
             for (recurring in recurringTasks) {
                 // check if bit is set for the day
                 val shouldRepeat = ((recurring.weekDays shr bitIndex) and 1) == 1
                 // true if bit is set
                 if (shouldRepeat) {
                     // make sure it does not already exist for that date
-                    val existing = taskDao.getTaskByRecurringSource(date, recurring.id)
+                    val existing = taskRepository.getTaskByRecurringSource(date, recurring.id)
                     if (existing == null) {
                         val newTask = Task(
                             title = recurring.title,
@@ -207,7 +188,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                             isCompleted = false,
                             sourceRecurringId = recurring.id
                         )
-                        taskDao.insert(newTask)
+                        taskRepository.insertTask(newTask)
                     }
                 }
             }
@@ -245,7 +226,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 description = description,
                 isCompleted = false
             )
-            taskDao.insert(task)
+            taskRepository.insertTask(task)
         }
     }
 
@@ -268,7 +249,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 title = title,
                 weekDays = bitmask
             )
-            recurringTaskDao.insert(task)
+            taskRepository.insertRecurringTask(task)
         }
     }
 
@@ -277,7 +258,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun updateTask(task: Task) {
         viewModelScope.launch {
-            taskDao.update(task)
+            taskRepository.updateTask(task)
         }
     }
 
@@ -288,9 +269,9 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             if (task.sourceRecurringId != null) {
-                recurringTaskDao.deleteWithId(task.sourceRecurringId)
+                taskRepository.deleteRecurringTaskById(task.sourceRecurringId)
             }
-            taskDao.delete(task)
+            taskRepository.deleteTask(task)
         }
     }
 
@@ -301,7 +282,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun deleteTaskFromId(id: Long){
         viewModelScope.launch {
-            recurringTaskDao.deleteWithId(id);
+            taskRepository.deleteRecurringTaskById(id);
         }
     }
 
@@ -313,7 +294,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleTaskCompletion(task: Task) {
         viewModelScope.launch {
             val updatedTask = task.copy(isCompleted = !task.isCompleted)
-            taskDao.update(updatedTask)
+            taskRepository.updateTask(updatedTask)
         }
     }
 
@@ -353,7 +334,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addPhotoPath(path: String) {
         viewModelScope.launch {
-            dailyEntryDao.addDailyEntry( DailyEntry(
+            dailyEntryRepository.insertEntry( DailyEntry(
                 date = "test",
                 note = "testo",
                 path
