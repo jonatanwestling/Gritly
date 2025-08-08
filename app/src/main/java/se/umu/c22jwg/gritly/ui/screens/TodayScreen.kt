@@ -71,7 +71,11 @@ fun TodayScreen(
     // Bottom sheet state
     var showBottomSheet by remember { mutableStateOf(false) }
 
-
+    LaunchedEffect(Unit) {
+        pictureViewModel.onPhotoTaken { path ->
+            taskViewModel.addPhotoPath(path)
+        }
+    }
     Scaffold(
         modifier = modifier,
         floatingActionButton = {

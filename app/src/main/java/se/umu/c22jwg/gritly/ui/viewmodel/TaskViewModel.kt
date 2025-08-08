@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import se.umu.c22jwg.gritly.data.AppDatabase
+import se.umu.c22jwg.gritly.data.DailyEntry
+import se.umu.c22jwg.gritly.data.DailyEntryDao
 import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.data.RecurringTaskDao
 import se.umu.c22jwg.gritly.data.Task
@@ -67,6 +69,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     private val taskDao: TaskDao = database.taskDao()
     private val recurringTaskDao: RecurringTaskDao = database.recurringTaskDao()
+    private val dailyEntryDao: DailyEntryDao = database.dailyEntryDao()
 
     /**
      * Constructor that loads the initials data.
@@ -346,5 +349,17 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         val dayOfWeek = targetDate.dayOfWeek.value // 1 = Monday, ..., 7 = Sunday
         val bitIndex = 7 - dayOfWeek // Map Monday=6, Sunday=0
         return recurringTasks.filter { ((it.weekDays shr bitIndex) and 1) == 1 }
+    }
+
+    fun addPhotoPath(path: String) {
+        viewModelScope.launch {
+            dailyEntryDao.addDailyEntry( DailyEntry(
+                date = "test",
+                note = "testo",
+                path
+
+            ))
+        }
+
     }
 }

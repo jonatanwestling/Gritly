@@ -46,6 +46,12 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
         return file.exists() && file.length() > 0
     }
 
+    fun onPhotoTaken(onPathAvailable: (String) -> Unit) {
+        if (file.exists()) {
+            onPathAvailable(file.absolutePath)
+        }
+    }
+
     private fun rotatedBitmap(file: File): Bitmap {
         var bm = BitmapFactory.decodeFile(file.absolutePath)
         val orientation = getExifRotation(file)
