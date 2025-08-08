@@ -334,8 +334,9 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addPhotoPath(path: String) {
         viewModelScope.launch {
+
             dailyEntryRepository.insertEntry( DailyEntry(
-                date = "test",
+                date = LocalDate.now().toString(),
                 note = "testo",
                 path
 
