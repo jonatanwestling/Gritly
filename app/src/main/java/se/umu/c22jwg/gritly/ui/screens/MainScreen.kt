@@ -1,12 +1,9 @@
 package se.umu.c22jwg.gritly.ui.screens
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -89,7 +86,7 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
         ) {
             // composable functions for each screen provided with necessary ViewModels
             composable(Screen.Today.route) { TodayScreen(taskViewModel, pictureViewModel) }
-            composable(Screen.AddGoal.route) { AddGoalScreen(taskViewModel) }
+            composable(Screen.AddGoal.route) { PlanScreen(taskViewModel) }
             composable(Screen.History.route) { HistoryScreen(taskViewModel, pictureViewModel) }
         }
     }
