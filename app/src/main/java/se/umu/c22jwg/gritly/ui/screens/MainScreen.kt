@@ -81,7 +81,7 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
         ) {
             composable(Screen.Today.route) { TodayScreen(taskViewModel, pictureViewModel ) }
             composable(Screen.AddGoal.route) { AddGoalScreen(taskViewModel) }
-            composable(Screen.History.route) { HistoryScreen(taskViewModel) }
+            composable(Screen.History.route) { HistoryScreen(taskViewModel, pictureViewModel) }
         }
     }
 }

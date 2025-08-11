@@ -52,6 +52,16 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
     private val _noteForToday = mutableStateOf<String>("")
     val noteForToday: State<String> = _noteForToday
 
+    private val _allEntries = mutableStateOf<List<DailyEntry>>(emptyList())
+    val allEntries: State<List<DailyEntry>> = _allEntries
+
+    fun loadAllEntries() {
+        viewModelScope.launch {
+            val entries = dailyEntryRepository.getAllEntries()
+            _allEntries.value = entries
+        }
+    }
+
     fun setTakePictureLauncher(launcher: () -> Unit) {
         takePictureLauncher = launcher
     }
@@ -129,7 +139,7 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
                     imagePath =  existingEntry?.imagePath ?: ""
                 )
             )
-            Log.d("PictureViewModel", "Note updated for $today: $note")
+            //Log.d("PictureViewModel", "Note updated for $today: $note")
         }
     }
 

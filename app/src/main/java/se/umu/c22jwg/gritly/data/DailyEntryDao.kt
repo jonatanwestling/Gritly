@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DailyEntryDao {
     @Query("SELECT * FROM daily_entry ORDER BY date DESC")
-    fun getDailyEntries(): Flow<List<DailyEntry>>
+    suspend fun getDailyEntries(): List<DailyEntry>
 
     @Query("SELECT * FROM daily_entry WHERE date = :date")
     suspend fun getEntryByDate(date: String): DailyEntry?
