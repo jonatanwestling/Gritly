@@ -24,20 +24,28 @@ import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
  * - Today: Displays today's tasks
  * - AddGoal: Allows users to add new tasks
  * - History: Shows the history of completed tasks
- * 
+ *
  * @param taskViewModel The ViewModel that provides the task data and handles task operations.
  */
 
- // Represents the different screens in the app with their respective routes, labels, and icons.
+// represents the different screens in the app with their respective routes, labels, and icons.
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Today : Screen("today", "Gritly", Icons.Default.Home)
     object AddGoal : Screen("add_goal", "Plan", Icons.Default.DateRange)
     object History : Screen("history", "History", Icons.Default.Refresh)
 }
 
+/**
+ * MainScreen is the main entry point of the Gritly app.
+ * It sets up the navigation structure and displays different screens based on user interaction.
+ *
+ * @param taskViewModel The ViewModel that provides the task data and handles task operations.
+ * @param pictureViewModel The ViewModel that handles the daily entries with pictures and comments.
+ */
 @Composable
 fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel) {
     val navController = rememberNavController()
+
     val items = listOf(Screen.Today, Screen.AddGoal, Screen.History)
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -47,10 +55,11 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
 
     Scaffold(
         topBar = {
+            // simple top bar to display the current title of the screen
             GritlyTopBar(title = currentScreen.label)
         },
         bottomBar = {
-            // The NavigationBar is the bottom navigation bar that allows users to switch between different screens.
+            // bottom navigation bar that allows users to switch between different screens
             NavigationBar {
                 items.forEach { screen ->
                     NavigationBarItem(
@@ -58,12 +67,15 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
                         label = { Text(screen.label) },
                         selected = currentRoute == screen.route,
                         onClick = {
+                            // navigate to the selected screen, not the current
                             if (currentRoute != screen.route) {
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
+                                        // pop up to the start destination to avoid building up the
+                                        // back stack
                                         saveState = true
                                     }
-                                    launchSingleTop = true
+                                    //save and restore state like scroll positions
                                     restoreState = true
                                 }
                             }
@@ -72,14 +84,15 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
                 }
             }
         }
-            ) { innerPadding ->
-                // The NavHost is the main content area that displays the current screen based on the navigation state.
+    ) { innerPadding ->
+        // navigation host that contains the different screens of the app
         NavHost(
             navController = navController,
             startDestination = Screen.Today.route,
             Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Today.route) { TodayScreen(taskViewModel, pictureViewModel ) }
+            // composable functions for each screen provided with necessary ViewModels
+            composable(Screen.Today.route) { TodayScreen(taskViewModel, pictureViewModel) }
             composable(Screen.AddGoal.route) { AddGoalScreen(taskViewModel) }
             composable(Screen.History.route) { HistoryScreen(taskViewModel, pictureViewModel) }
         }
@@ -89,7 +102,7 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
 /**
  * GritlyTopBar is a top app bar that displays the title of the current screen.
  * It is used in the MainScreen to provide a consistent header across different screens.
- * 
+ *
  * @param title The title to be displayed in the top bar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
