@@ -30,6 +30,8 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.TakePicture()) {
         if(it) {
             viewModel.file=file
+            // Insert path to DB
+            viewModel.onPhotoTaken()
         }
     }
 
@@ -57,7 +59,10 @@ class MainActivity : ComponentActivity() {
         }
 
         //A storage location for the image
-        file=File(filesDir, "mypic.jpg")
+        val dateString = java.time.LocalDate.now().toString()
+        file = File(filesDir, "dayPhoto$dateString.jpg")
+
+        viewModel.file = file
     }
 
     private fun takePicture() {
