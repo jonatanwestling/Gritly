@@ -43,6 +43,7 @@ import java.time.DayOfWeek
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
+import se.umu.c22jwg.gritly.utils.cleanDate
 import java.time.format.DateTimeFormatter
 
 /**
@@ -119,7 +120,7 @@ fun PlanScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Selected: ${selectedDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}",
+                        text = "Selected: ${cleanDate(selectedDate.toString())}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )

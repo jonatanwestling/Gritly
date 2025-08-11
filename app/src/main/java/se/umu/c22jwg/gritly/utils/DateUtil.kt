@@ -21,6 +21,7 @@ fun cleanDate(dateStr: String): String {
     return when (date) {
         today -> "Today"
         today.minusDays(1) -> "Yesterday"
+        today.plusDays(1) -> "Tomorrow"
         else -> date.format(pattern)
     }
 }
