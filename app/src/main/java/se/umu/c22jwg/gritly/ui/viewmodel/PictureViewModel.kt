@@ -42,7 +42,7 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
         if (file.isFile) {
             rotatedBitmap(file)
         } else {
-            BitmapFactory.decodeResource(app.resources, android.R.drawable.ic_menu_gallery)
+            null
         }
     )
 
