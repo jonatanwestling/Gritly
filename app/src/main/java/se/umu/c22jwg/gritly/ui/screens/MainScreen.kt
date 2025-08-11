@@ -53,38 +53,34 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
 
     val currentScreen = items.find { it.route == currentRoute } ?: Screen.Today
 
-    Scaffold(
-        topBar = {
-            // simple top bar to display the current title of the screen
-            GritlyTopBar(title = currentScreen.label)
-        },
-        bottomBar = {
-            // bottom navigation bar that allows users to switch between different screens
-            NavigationBar {
-                items.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = { Text(screen.label) },
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            // navigate to the selected screen, not the current
-                            if (currentRoute != screen.route) {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        // pop up to the start destination to avoid building up the
-                                        // back stack
-                                        saveState = true
-                                    }
-                                    //save and restore state like scroll positions
-                                    restoreState = true
+    Scaffold(topBar = {
+        // simple top bar to display the current title of the screen
+        GritlyTopBar(title = currentScreen.label)
+    }, bottomBar = {
+        // bottom navigation bar that allows users to switch between different screens
+        NavigationBar {
+            items.forEach { screen ->
+                NavigationBarItem(
+                    icon = { Icon(screen.icon, contentDescription = screen.label) },
+                    label = { Text(screen.label) },
+                    selected = currentRoute == screen.route,
+                    onClick = {
+                        // navigate to the selected screen, not the current
+                        if (currentRoute != screen.route) {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    // pop up to the start destination to avoid building up the
+                                    // back stack
+                                    saveState = true
                                 }
+                                //save and restore state like scroll positions
+                                restoreState = true
                             }
                         }
-                    )
-                }
+                    })
             }
         }
-    ) { innerPadding ->
+    }) { innerPadding ->
         // navigation host that contains the different screens of the app
         NavHost(
             navController = navController,
@@ -108,9 +104,5 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GritlyTopBar(title: String) {
-    CenterAlignedTopAppBar(
-        title = { Text(title) },
-        navigationIcon = {},
-        actions = {}
-    )
+    CenterAlignedTopAppBar(title = { Text(title) }, navigationIcon = {}, actions = {})
 }
