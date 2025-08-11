@@ -11,6 +11,9 @@ interface DailyEntryDao {
     @Query("SELECT * FROM daily_entry ORDER BY date DESC")
     fun getDailyEntries(): Flow<List<DailyEntry>>
 
+    @Query("SELECT * FROM daily_entry WHERE date = :date")
+    suspend fun getEntryByDate(date: String): DailyEntry?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addDailyEntry(dailyEntry: DailyEntry)
 }
