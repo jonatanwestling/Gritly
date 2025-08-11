@@ -45,19 +45,27 @@ import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import java.time.format.DateTimeFormatter
 
+/**
+ * PlanScreen displays a screen where users can view and manage their planned tasks. The screen
+ * show a list of tasks planned for a specific date, defaults to the next day. User can look at
+ * planned tasks or plan new tasks for a specific date that is selected by a calendar
+ * (open source library). The user adds tasks to the selected date by pressing the add FAB. Users
+ * can then add tasks or recurring tasks, which will then be displayed in the list.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlanScreen(
     taskViewModel: TaskViewModel,
     modifier: Modifier = Modifier,
 ) {
+    // selected date defaults to tomorrow
     var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1)) }
-
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
     val endMonth = remember { currentMonth.plusMonths(100) }
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
     val daysOfWeek = remember { daysOfWeek(firstDayOfWeek = firstDayOfWeek) }
+    // states for the calendar
     val state = rememberCalendarState(
         startMonth = startMonth,
         endMonth = endMonth,
@@ -66,14 +74,15 @@ fun PlanScreen(
     )
     val coroutineScope = rememberCoroutineScope()
 
-    // Bottom sheet states
+    // bottom sheet states
     var showBottomSheet by remember { mutableStateOf(false) }
     var showCalendarSheet by remember { mutableStateOf(false) }
     val calendarSheetState = rememberModalBottomSheetState(
+        // expand all the way
         skipPartiallyExpanded = true
     )
 
-    // Scroll to the selected 
+    // scroll to the selected month if it is in the grey area of the beginning of next month
     LaunchedEffect(selectedDate) {
         val targetMonth = YearMonth.from(selectedDate)
         if (state.firstVisibleMonth.yearMonth != targetMonth) {
@@ -82,13 +91,11 @@ fun PlanScreen(
     }
 
     Scaffold(
-        modifier = modifier,
-        floatingActionButton = {
+        modifier = modifier, floatingActionButton = {
             FloatingActionButton(onClick = { showBottomSheet = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +103,7 @@ fun PlanScreen(
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Calendar toggle button
+            // calendar toggle button
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,7 +132,9 @@ fun PlanScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
             // Show planned recurring tasks and normal tasks for selected date
-            UnifiedPlannedTasksList(taskViewModel = taskViewModel, selectedDate = selectedDate.toString())
+            UnifiedPlannedTasksList(
+                taskViewModel = taskViewModel, selectedDate = selectedDate.toString()
+            )
         }
         // AddTaskBottomSheet component
         AddTaskBottomSheet(
@@ -138,8 +147,7 @@ fun PlanScreen(
         // Calendar BottomSheet
         if (showCalendarSheet) {
             ModalBottomSheet(
-                onDismissRequest = { showCalendarSheet = false },
-                sheetState = calendarSheetState
+                onDismissRequest = { showCalendarSheet = false }, sheetState = calendarSheetState
             ) {
                 Column(
                     modifier = Modifier
@@ -157,40 +165,41 @@ fun PlanScreen(
                         currentMonth = state.firstVisibleMonth.yearMonth,
                         goToPrevious = {
                             coroutineScope.launch {
-                                state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
+                                state.animateScrollToMonth(
+                                    state.firstVisibleMonth.yearMonth.minusMonths(
+                                        1
+                                    )
+                                )
                             }
                         },
                         goToNext = {
                             coroutineScope.launch {
-                                state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
+                                state.animateScrollToMonth(
+                                    state.firstVisibleMonth.yearMonth.plusMonths(
+                                        1
+                                    )
+                                )
                             }
-                        }
-                    )
+                        })
                     // Horizontal calendar provided by the Calendar open source library
                     HorizontalCalendar(
-                        state = state,
-                        dayContent = { day ->
-                            Day(
-                                day = day,
-                                isSelected = selectedDate == day.date,
-                                onClick = { 
-                                    selectedDate = it.date
-                                    coroutineScope.launch {
-                                        calendarSheetState.hide()
-                                    }.invokeOnCompletion {
-                                        if (!calendarSheetState.isVisible) {
-                                            showCalendarSheet = false
-                                        }
+                        state = state, dayContent = { day ->
+                        Day(
+                            day = day, isSelected = selectedDate == day.date, onClick = {
+                                selectedDate = it.date
+                                coroutineScope.launch {
+                                    calendarSheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!calendarSheetState.isVisible) {
+                                        showCalendarSheet = false
                                     }
                                 }
-                            )
-                        },
-                        monthHeader = {
-                            MonthHeader(daysOfWeek = daysOfWeek)
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                            })
+                    }, monthHeader = {
+                        MonthHeader(daysOfWeek = daysOfWeek)
+                    }, modifier = Modifier.fillMaxWidth()
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -229,8 +238,10 @@ private fun SimpleCalendarTitle(
         }
         // month in the middle
         Text(
-            text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
-                    " ${currentMonth.year}",
+            text = currentMonth.month.getDisplayName(
+                TextStyle.FULL,
+                Locale.getDefault()
+            ) + " ${currentMonth.year}",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -247,7 +258,7 @@ private fun SimpleCalendarTitle(
 
 /**
  * Function to display the name of the days of the week in the calendar header.
- * This is used in the calendar bottom sheet. 
+ * This is used in the calendar bottom sheet.
  *
  * @param daysOfWeek The days of the week
  */
@@ -282,9 +293,7 @@ private fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
  */
 @Composable
 private fun Day(
-    day: CalendarDay,
-    isSelected: Boolean,
-    onClick: (CalendarDay) -> Unit
+    day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit
 ) {
     val today = LocalDate.now()
     val isSelectable = day.position == DayPosition.MonthDate && day.date.isAfter(today)
@@ -300,20 +309,15 @@ private fun Day(
                 else Color.Transparent
             )
             .clickable(
-                enabled = isSelectable,
-                onClick = { onClick(day) }
-            ),
-        contentAlignment = Alignment.Center
-    ) {
+                enabled = isSelectable, onClick = { onClick(day) }),
+        contentAlignment = Alignment.Center) {
         Text(
-            text = day.date.dayOfMonth.toString(),
-            color = when {
+            text = day.date.dayOfMonth.toString(), color = when {
                 isSelected -> MaterialTheme.colorScheme.primary
                 isOutOfMonth -> Color.Gray // Grey out in-month and out-of-month filler days
                 day.date.isAfter(today) -> MaterialTheme.colorScheme.onSurface
                 else -> Color.Gray // Today and previous days are grey
-            },
-            fontSize = 14.sp
+            }, fontSize = 14.sp
         )
     }
 }
@@ -321,7 +325,7 @@ private fun Day(
 /**
  * Displays the planned tasks for a specific date. It displays both normal tasks and recurring tasks.
  * It combines the tasks into a unified list, where each item is either a Task or a RecurringTask.
- * 
+ *
  * @param taskViewModel The ViewModel that provides access to tasks
  * @param selectedDate The date for which to display planned tasks, formatted as "yyyy-MM-dd"
  */
@@ -389,8 +393,7 @@ fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = task.title,
@@ -416,11 +419,11 @@ fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
                     .size(24.dp)
                     .clickable {
                         taskViewModel.deleteTask(task)
-                    }
-            )
+                    })
         }
     }
 }
+
 /**
  * Displays a row for a planned recurring task. It includes the task title, an icon for recurring tasks,
  * and a delete icon to remove the task.
@@ -445,24 +448,23 @@ fun PlannedRecurringTaskRow(recurringTask: RecurringTask, taskViewModel: TaskVie
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = "Recurring task",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .size(24.dp)
-                    .padding(end = 8.dp)
-            )
-            Text(
-                text = recurringTask.title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-        }
+            Row(
+                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Recurring task",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 8.dp)
+                )
+                Text(
+                    text = recurringTask.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Delete",
@@ -471,8 +473,7 @@ fun PlannedRecurringTaskRow(recurringTask: RecurringTask, taskViewModel: TaskVie
                     .size(24.dp)
                     .clickable {
                         taskViewModel.deleteTaskFromId(recurringTask.id)
-                    }
-            )
+                    })
         }
     }
 }

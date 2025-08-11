@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
+import se.umu.c22jwg.gritly.utils.cleanDate
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -205,26 +206,5 @@ fun TaskRow(task: Task, modifier: Modifier = Modifier) {
                 color = textColor
             )
         )
-    }
-}
-
-/**
- * cleanDate is a function that formats a date string into a clean readable format.
- * It checks if the date is today, yesterday, or a specific date in the past and formats it accordingly.
- *
- * @param dateStr The date string in ISO format (yyyy-MM-dd).
- * @return A human-readable string representing the date.
- *        Returns "Today" if the date is today, "Yesterday" if it was yesterday,
- *        or the formatted date string for any other past date.
- */
-fun cleanDate(dateStr: String): String {
-    val date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE)
-    val today = LocalDate.now()
-    val pattern = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault())
-
-    return when (date) {
-        today -> "Today"
-        today.minusDays(1) -> "Yesterday"
-        else -> date.format(pattern)
     }
 }
