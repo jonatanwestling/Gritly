@@ -63,6 +63,9 @@ dependencies {
     implementation("androidx.compose.animation:animation:1.8.3")
     // The compose calendar library for Android
     implementation("com.kizitonwose.calendar:compose:2.6.2")
+
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
+
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
     implementation(libs.androidx.ui)
