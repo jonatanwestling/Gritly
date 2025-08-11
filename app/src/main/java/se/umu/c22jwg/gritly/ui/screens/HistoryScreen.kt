@@ -23,24 +23,31 @@ import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import java.util.*
 
+/**
+ * HistoryScreen is a composable function that displays a feed of past daily entries with their
+ * associated tasks.It allows users to view completed tasks for each date and shows a bottom sheet
+ * with detailed task information when a card is clicked.
+ *
+ * @param taskViewModel The ViewModel that provides the task data and handles task operations.
+ * @param pictureViewModel The ViewModel that handles the daily entries and pictures.
+ */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel) {
     val entries by pictureViewModel.allEntries
     val bitmap by pictureViewModel.bitmap
     val allTasks by taskViewModel.allTasks.collectAsState()
-
+    // state variables for the bottom sheet
     var selectedDateForSheet by remember { mutableStateOf<String?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }
-
+    // load all daily entries when the screen is launched
     LaunchedEffect(Unit) {
         pictureViewModel.loadAllEntries()
     }
 
-    // Group tasks by date (no filtering)
+    // group tasks by date
     val tasksByDate = remember(allTasks) {
         allTasks.groupBy { it.date }
     }
@@ -56,7 +63,9 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
                 val tasksForThisDate = tasksByDate[entry.date] ?: emptyList()
                 val totalTasks = tasksForThisDate.size
                 val completedTasks = tasksForThisDate.count { it.isCompleted }
-                val percentCompleted = if (totalTasks > 0) (completedTasks * 100 / totalTasks) else 0
+                // calculate the percentage of completed tasks
+                val percentCompleted =
+                    if (totalTasks > 0) (completedTasks * 100 / totalTasks) else 0
 
                 Card(
                     modifier = Modifier
@@ -81,7 +90,7 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
                                 .padding(end = 16.dp)
                         ) {
                             Text(
-                                text = formatHumanDate(entry.date),
+                                text = cleanDate(entry.date),
                                 style = MaterialTheme.typography.titleLarge,
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -92,7 +101,7 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
-
+                            // show note just if it is not empty
                             if (entry.note.isNotBlank()) {
                                 Text(
                                     text = entry.note,
@@ -100,12 +109,14 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
                                 )
                             }
                         }
+                        // show the image if the bitmap is not null
                         bitmap?.let {
-                            androidx.compose.foundation.Image(
+                            Image(
                                 bitmap = it.asImageBitmap(),
-                                contentDescription = "Captured Image",
+                                contentDescription = "Captured daily image ",
                                 modifier = Modifier
                                     .size(134.dp)
+                                    // rounded corners for aesthetics
                                     .clip(RoundedCornerShape(12.dp)),
                                 contentScale = ContentScale.Crop
                             )
@@ -114,73 +125,82 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
                 }
             }
         }
-
-        if (showBottomSheet && selectedDateForSheet != null) {
+        if (showBottomSheet) {
             TaskBottomSheet(
-                showBottomSheet = showBottomSheet,
                 onDismiss = { showBottomSheet = false },
                 tasks = tasksByDate[selectedDateForSheet] ?: emptyList(),
-                title = "Tasks for ${formatHumanDate(selectedDateForSheet!!)}"
+                title = "Tasks for ${cleanDate(selectedDateForSheet!!)}"
             )
         }
     }
 }
 
+/**
+ * TaskBottomSheet is a composable function that displays a bottom sheet with a list of tasks for a specific date.
+ * It shows the tasks in a LazyColumn displayed like  in the today screen but greyed out to indicate that the past cant
+ * be changed.
+ *
+ * @param onDismiss Callback to dismiss the bottom sheet.
+ * @param tasks List of tasks to display in the bottom sheet.
+ * @param title Title of the bottom sheet.
+ * @param modifier Modifier for additional styling or layout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskBottomSheet(
-    showBottomSheet: Boolean,
-    onDismiss: () -> Unit,
-    tasks: List<Task>,
-    title: String,
-    modifier: Modifier = Modifier
+    onDismiss: () -> Unit, tasks: List<Task>, title: String, modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState()
 
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState
+    ModalBottomSheet(
+        onDismissRequest = onDismiss, sheetState = sheetState
+    ) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+            Text(title, style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(16.dp))
+            // displays the tasks in a scrollable list as in the TodayScreen
+            LazyColumn(
+                modifier = Modifier.fillMaxHeight(0.6f)
             ) {
-                Text(title, style = MaterialTheme.typography.titleLarge)
-                Spacer(Modifier.height(16.dp))
-                LazyColumn(
-                    modifier = Modifier.fillMaxHeight(0.6f) // Limit height a bit
-                ) {
-                    items(tasks, key = { it.id }) { task ->
-                        TaskRow(
-                            task = task,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                items(tasks, key = { it.id }) { task ->
+                    TaskRow(
+                        task = task, modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
     }
 }
 
+/**
+ * TaskRow is a composable function that displays a single task in a row format.
+ * This code is a slightly modified version of the TaskRow from the TodayScreen.
+ * It is used in the TaskBottomSheet to show past tasks and does not allow any
+ * interaction with the task.
+ *
+ * @param task The task to display.
+ * @param modifier Modifier for additional styling or layout.
+ */
 @Composable
 fun TaskRow(task: Task, modifier: Modifier = Modifier) {
     // Make the text grey so user understand it is disabled
-    val textColor =  MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     Row(
-        modifier = modifier.padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
             checked = task.isCompleted,
-            onCheckedChange = null,
-            enabled = false
+            // Disable the the interaction with the checkbox
+            onCheckedChange = null, enabled = false
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = task.title,
-            style = MaterialTheme.typography.bodyLarge.copy(
+            text = task.title, style = MaterialTheme.typography.bodyLarge.copy(
+                // Display the the text as normal
                 textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                 color = textColor
             )
@@ -188,13 +208,23 @@ fun TaskRow(task: Task, modifier: Modifier = Modifier) {
     }
 }
 
-fun formatHumanDate(dateStr: String): String {
-    val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-    val date = LocalDate.parse(dateStr, formatter)
+/**
+ * cleanDate is a function that formats a date string into a clean readable format.
+ * It checks if the date is today, yesterday, or a specific date in the past and formats it accordingly.
+ *
+ * @param dateStr The date string in ISO format (yyyy-MM-dd).
+ * @return A human-readable string representing the date.
+ *        Returns "Today" if the date is today, "Yesterday" if it was yesterday,
+ *        or the formatted date string for any other past date.
+ */
+fun cleanDate(dateStr: String): String {
+    val date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE)
     val today = LocalDate.now()
-    return when (ChronoUnit.DAYS.between(date, today)) {
-        0L -> "Today"
-        1L -> "Yesterday"
-        else -> date.format(DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()))
+    val pattern = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault())
+
+    return when (date) {
+        today -> "Today"
+        today.minusDays(1) -> "Yesterday"
+        else -> date.format(pattern)
     }
 }
