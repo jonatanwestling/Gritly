@@ -327,21 +327,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun getRecurringTasksForDate(date: String, recurringTasks: List<RecurringTask>): List<RecurringTask> {
         val targetDate = LocalDate.parse(date)
-        val dayOfWeek = targetDate.dayOfWeek.value // 1 = Monday, ..., 7 = Sunday
-        val bitIndex = 7 - dayOfWeek // Map Monday=6, Sunday=0
+        val dayOfWeek = targetDate.dayOfWeek.value
+        val bitIndex = 7 - dayOfWeek
         return recurringTasks.filter { ((it.weekDays shr bitIndex) and 1) == 1 }
-    }
-
-    fun addPhotoPath(path: String) {
-        viewModelScope.launch {
-
-            dailyEntryRepository.insertEntry( DailyEntry(
-                date = LocalDate.now().toString(),
-                note = "testo",
-                path
-
-            ))
-        }
-
     }
 }
