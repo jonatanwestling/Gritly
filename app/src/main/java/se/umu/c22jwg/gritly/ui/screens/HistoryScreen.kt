@@ -28,6 +28,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import androidx.compose.runtime.livedata.observeAsState
 
 /**
  * HistoryScreen is a composable function that displays a feed of past daily entries with their
@@ -42,7 +43,7 @@ import java.util.*
 fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel) {
     val entries by pictureViewModel.allEntries
     val bitmap by pictureViewModel.bitmap
-    val allTasks by taskViewModel.allTasks.collectAsState()
+    val allTasks by taskViewModel.allTasks.observeAsState(emptyList())
     // state variables for the bottom sheet
     var selectedDateForSheet by remember { mutableStateOf<String?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }

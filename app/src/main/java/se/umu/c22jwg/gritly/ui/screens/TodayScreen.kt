@@ -25,6 +25,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -69,9 +70,8 @@ fun TodayScreen(
     modifier: Modifier = Modifier,
     ) {
 
-    val allTasks by taskViewModel.allTasks.collectAsState()
     val today = LocalDate.now().toString()
-    val todayTasks by taskViewModel.todayTasks.collectAsState()
+    val todayTasks by taskViewModel.todayTasks.observeAsState(emptyList())
     val listState = rememberLazyListState()
     var scrollToTop by remember { mutableStateOf(false) }
 

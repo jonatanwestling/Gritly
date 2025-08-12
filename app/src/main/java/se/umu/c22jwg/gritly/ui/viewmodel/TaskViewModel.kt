@@ -3,6 +3,8 @@ package se.umu.c22jwg.gritly.ui.viewmodel
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
 import kotlinx.coroutines.flow.Flow
@@ -61,26 +63,24 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // state for all tasks
-    private val _allTasks = MutableStateFlow<List<Task>>(emptyList())
-    val allTasks: StateFlow<List<Task>> = _allTasks.asStateFlow()
+    private val _allTasks = MutableLiveData<List<Task>>(emptyList())
+    val allTasks: LiveData<List<Task>> = _allTasks
 
-    // state for today's tasks 
-    private val _todayTasks = MutableStateFlow<List<Task>>(emptyList())
-    val todayTasks: StateFlow<List<Task>> = _todayTasks.asStateFlow()
+    // state for today's tasks
+    private val _todayTasks = MutableLiveData<List<Task>>(emptyList())
+    val todayTasks: LiveData<List<Task>> = _todayTasks
 
-    // state for completed tasks 
-    private val _completedTasks = MutableStateFlow<List<Task>>(emptyList())
-    val completedTasks: StateFlow<List<Task>> = _completedTasks.asStateFlow()
+    // state for completed tasks
+    private val _completedTasks = MutableLiveData<List<Task>>(emptyList())
+    val completedTasks: LiveData<List<Task>> = _completedTasks
 
     // state for recurring tasks
-    private val _recurringTasks = MutableStateFlow<List<RecurringTask>>(emptyList())
-    val recurringTasks: StateFlow<List<RecurringTask>> = _recurringTasks.asStateFlow()
+    private val _recurringTasks = MutableLiveData<List<RecurringTask>>(emptyList())
+    val recurringTasks: LiveData<List<RecurringTask>> = _recurringTasks
 
-    // state for selected date, defaulting to tomorrow (the user can only plan tasks for tomorrow or later)
-    private val _selectedDate = MutableStateFlow(LocalDate.now().plusDays(1).toString())
-    val selectedDate: StateFlow<String> = _selectedDate.asStateFlow()
-
-    /**
+    // state for selected date, defaulting to tomorrow (user can only plan for tomorrow or later)
+    private val _selectedDate = MutableLiveData(LocalDate.now().plusDays(1).toString())
+    val selectedDate: LiveData<String> = _selectedDate    /**
      * Sets the selected date for planning tasks.
      * This is used to filter tasks based on the selected date
      * @param date The date to set as selected, in "yyyy-MM-dd" format.
@@ -88,25 +88,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun setSelectedDate(date: String) {
         _selectedDate.value = date
     }
-
-    /**
-     * Combines all tasks and recurring tasks to create a list of planned tasks for the selected date.
-     * This list includes both regular tasks and recurring tasks that are scheduled for the selected date.
-     * The list updates automatically when the selected date, allTasks, or recurringTasks change.
-     * 
-     * This is used to display tasks in the planning screen.
-     * @return A Flow that emits a list of pairs, where each pair contains a Task and a RecurringTask.
-     *         The Task is null if the recurring task is planned for that date or the other way around.
-     */
-    val plannedTasks = combine(allTasks, recurringTasks, selectedDate) { allTasks, recurringTasks, selectedDate ->
-        val plannedTasks = allTasks.filter { it.date == selectedDate }
-        // Filter out recurring tasks that are already created as regular tasks for the selected date
-        val recurringTaskIdsInTasks = plannedTasks.mapNotNull { it.sourceRecurringId }.toSet()
-        val plannedRecurringTasks = getRecurringTasksForDate(selectedDate, recurringTasks)
-            .filter { it.id !in recurringTaskIdsInTasks }
-        // Combine both lists into a list of pairs
-        plannedTasks.map { it to null } + plannedRecurringTasks.map { null to it }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
      * Loads all tasks from database and updates the general task list
@@ -316,6 +297,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun getTasksForDate(date: String): List<Task> {
         return _allTasks.value.filter { it.date == date }
+    }
+
+    fun getRecurringTasksForDate(date: String): List<RecurringTask> {
+        return getRecurringTasksForDate(date, _recurringTasks.value)
     }
 
     /**

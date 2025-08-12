@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +45,6 @@ import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import se.umu.c22jwg.gritly.utils.cleanDate
-import java.time.format.DateTimeFormatter
 
 /**
  * PlanScreen displays a screen where users can view and manage their planned tasks. The screen
@@ -134,7 +134,7 @@ fun PlanScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
             // show planned recurring tasks and normal tasks for selected date
-            UnifiedPlannedTasksList(
+            PlannedTaskList(
                 taskViewModel = taskViewModel, selectedDate = selectedDate.toString()
             )
         }
@@ -186,20 +186,20 @@ fun PlanScreen(
                     // Horizontal calendar provided by the Calendar open source library
                     HorizontalCalendar(
                         state = state, dayContent = { day ->
-                        Day(
-                            day = day, isSelected = selectedDate == day.date, onClick = {
-                                selectedDate = it.date
-                                coroutineScope.launch {
-                                    calendarSheetState.hide()
-                                }.invokeOnCompletion {
-                                    if (!calendarSheetState.isVisible) {
-                                        showCalendarSheet = false
+                            Day(
+                                day = day, isSelected = selectedDate == day.date, onClick = {
+                                    selectedDate = it.date
+                                    coroutineScope.launch {
+                                        calendarSheetState.hide()
+                                    }.invokeOnCompletion {
+                                        if (!calendarSheetState.isVisible) {
+                                            showCalendarSheet = false
+                                        }
                                     }
-                                }
-                            })
-                    }, monthHeader = {
-                        MonthHeader(daysOfWeek = daysOfWeek)
-                    }, modifier = Modifier.fillMaxWidth()
+                                })
+                        }, monthHeader = {
+                            MonthHeader(daysOfWeek = daysOfWeek)
+                        }, modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -312,7 +312,8 @@ private fun Day(
             )
             .clickable(
                 enabled = isSelectable, onClick = { onClick(day) }),
-        contentAlignment = Alignment.Center) {
+        contentAlignment = Alignment.Center
+    ) {
         Text(
             text = day.date.dayOfMonth.toString(), color = when {
                 isSelected -> MaterialTheme.colorScheme.primary
@@ -332,26 +333,28 @@ private fun Day(
  * @param selectedDate The date for which to display planned tasks, formatted as "yyyy-MM-dd"
  */
 @Composable
-fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) {
-    // Tell the ViewModel about the selected date
+fun PlannedTaskList(taskViewModel: TaskViewModel, selectedDate: String) {
+    // tell the ViewModel about the selected date
     LaunchedEffect(selectedDate) {
         taskViewModel.setSelectedDate(selectedDate)
     }
-    // Collect the planned tasks from the ViewModel
-    val plannedTasks by taskViewModel.plannedTasks.collectAsState()
+    val allTasks by taskViewModel.allTasks.observeAsState(emptyList())
+    val recurringTasks by taskViewModel.recurringTasks.observeAsState(emptyList())
 
+    val filteredTasks = allTasks.filter { it.date == selectedDate }
+    val filteredRecurringTasks =
+        taskViewModel.getRecurringTasksForDate(selectedDate, recurringTasks)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        // title and count of planned tasks
         Text(
-            text = "Planned Tasks (${plannedTasks.size})",
+            text = "Planned Tasks (${filteredTasks.size + filteredRecurringTasks.size})",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        if (plannedTasks.isEmpty()) {
+        if (filteredTasks.isEmpty() && filteredRecurringTasks.isEmpty()) {
             Text(
                 text = "No tasks planned for this date",
                 style = MaterialTheme.typography.bodyMedium,
@@ -361,12 +364,11 @@ fun UnifiedPlannedTasksList(taskViewModel: TaskViewModel, selectedDate: String) 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(plannedTasks) { (task, recurringTask) ->
-                    if (task != null) {
-                        PlannedTaskRow(task, taskViewModel)
-                    } else if (recurringTask != null) {
-                        PlannedRecurringTaskRow(recurringTask, taskViewModel)
-                    }
+                items(filteredTasks, key = { it.id }) { task ->
+                    PlannedTaskRow(task, taskViewModel)
+                }
+                items(filteredRecurringTasks, key = { it.id }) { recurringTask ->
+                    PlannedRecurringTaskRow(recurringTask, taskViewModel)
                 }
             }
         }
@@ -420,6 +422,7 @@ fun PlannedTaskRow(task: Task, taskViewModel: TaskViewModel) {
                 modifier = Modifier
                     .size(24.dp)
                     .clickable {
+                        // Delete the task
                         taskViewModel.deleteTask(task)
                     })
         }
@@ -440,9 +443,6 @@ fun PlannedRecurringTaskRow(recurringTask: RecurringTask, taskViewModel: TaskVie
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
     ) {
         Row(
             modifier = Modifier
@@ -477,13 +477,5 @@ fun PlannedRecurringTaskRow(recurringTask: RecurringTask, taskViewModel: TaskVie
                         taskViewModel.deleteTaskFromId(recurringTask.id)
                     })
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AddGoalScreenPreview() {
-    GritlyTheme {
-        Text("Hey")
     }
 }
