@@ -3,7 +3,6 @@ package se.umu.c22jwg.gritly.ui.screens
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,11 +13,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.material3.FloatingActionButton
@@ -30,17 +27,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.coroutineScope
-import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
@@ -54,10 +46,10 @@ import kotlinx.coroutines.launch
 
 /**
  * Composable function that displays the Today screen, showing active tasks for the current day
- * and allowing users to add new tasks via the bottom sheet triggered by the FAB. The user can 
+ * and allowing users to add new tasks via the bottom sheet triggered by the FAB. The user can
  * see a progress bar indicating the completion status of today's tasks. As well as see the tasks
  * that are left and the tasks that are completed in a list with checkboxes to toggle completion.
- * 
+ *
  * @param taskViewModel The ViewModel that provides the task data and handles task operations.
  * @param modifier Modifier to be applied to the screen container.
  */
@@ -68,7 +60,7 @@ fun TodayScreen(
     taskViewModel: TaskViewModel,
     pictureViewModel: PictureViewModel,
     modifier: Modifier = Modifier,
-    ) {
+) {
 
     val today = LocalDate.now().toString()
     val todayTasks by taskViewModel.todayTasks.observeAsState(emptyList())
@@ -93,41 +85,33 @@ fun TodayScreen(
     }
 
     Scaffold(
-        modifier = modifier,
-        floatingActionButton = {
-                FloatingActionButton(onClick = { showBottomSheet = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Task")
-                }
+        modifier = modifier, floatingActionButton = {
+            FloatingActionButton(onClick = { showBottomSheet = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Add Task")
+            }
 
-        }
-    ) {
-        Column (
-            modifier = Modifier
-            .fillMaxSize()
-        ){
-
-            ProgressBar(todayTasks, pictureViewModel, context,
-                permissionLauncher, { showImageOptionsSheet = true })
-
-
+        }) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ProgressBar(
+                todayTasks,
+                pictureViewModel,
+                context,
+                permissionLauncher,
+                { showImageOptionsSheet = true })
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                state = listState
+                    .padding(horizontal = 16.dp), state = listState
             ) {
                 items(todayTasks, key = { it.id }) { task ->
                     TaskRow(
-                        task = task,
-                        modifier = Modifier.animateItem(),
-                        onToggle = {
-
-                                scrollToTop = true
-
+                        task = task, modifier = Modifier.animateItem(), onToggle = {
+                            scrollToTop = true
                             taskViewModel.toggleTaskCompletion(task)
-                        }
-                    )
+                        })
                 }
             }
             // Scroll to top after list updates when a task is marked as done
@@ -167,9 +151,7 @@ fun TodayScreen(
  */
 @Composable
 fun TaskRow(
-    task: Task,
-    modifier: Modifier = Modifier,
-    onToggle: () -> Unit
+    task: Task, modifier: Modifier = Modifier, onToggle: () -> Unit
 ) {
     Row(
         modifier = modifier
@@ -180,9 +162,7 @@ fun TaskRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = task.isCompleted,
-            onCheckedChange = { onToggle() }
-        )
+            checked = task.isCompleted, onCheckedChange = { onToggle() })
         Text(
             text = task.title,
             modifier = Modifier
@@ -194,17 +174,21 @@ fun TaskRow(
                 LocalTextStyle.current
             }
         )
-        if (task.sourceRecurringId != null){
+        if (task.sourceRecurringId != null) {
             Icon(Icons.Filled.Refresh, contentDescription = "Take Photo")
         }
     }
 }
 
 
-
 @Composable
-fun ProgressBar(tasks: List<Task>,  pictureViewModel: PictureViewModel,  context: android.content.Context,
-                permissionLauncher: androidx.activity.result.ActivityResultLauncher<String>, onImageClick: () -> Unit) {
+fun ProgressBar(
+    tasks: List<Task>,
+    pictureViewModel: PictureViewModel,
+    context: android.content.Context,
+    permissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    onImageClick: () -> Unit
+) {
     val completed = tasks.count { it.isCompleted }
     val total = tasks.size
     val progress = if (total > 0) completed / total.toFloat() else 0f
@@ -219,7 +203,7 @@ fun ProgressBar(tasks: List<Task>,  pictureViewModel: PictureViewModel,  context
     }
 
     LaunchedEffect(savedDayText) {
-        dayText =savedDayText
+        dayText = savedDayText
     }
 
     Card(
@@ -249,12 +233,11 @@ fun ProgressBar(tasks: List<Task>,  pictureViewModel: PictureViewModel,  context
                 color = ProgressIndicatorDefaults.linearColor,
                 trackColor = ProgressIndicatorDefaults.linearTrackColor,
 
-            )
+                )
 
             // Spacer for visual breathing room
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
             ) {
                 val maxLines = 5
                 TextField(
@@ -287,17 +270,18 @@ fun ProgressBar(tasks: List<Task>,  pictureViewModel: PictureViewModel,  context
                             .size(84.dp)
                             .padding(4.dp)
                             .clip(RoundedCornerShape(12.dp))
-                        .clickable {onImageClick()},
+                            .clickable { onImageClick() },
                         contentScale = ContentScale.Crop
                     )
                 } ?: Button(
                     onClick = {
-                        when (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)) {
+                        when (ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        )) {
                             PackageManager.PERMISSION_GRANTED -> pictureViewModel.takePicture()
                             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
                         }
-                    },
-                    modifier = Modifier
+                    }, modifier = Modifier
                         .padding(4.dp)
                         .height(64.dp)
                 ) {
@@ -329,19 +313,16 @@ fun TimeLeftInDayCounter() {
     val seconds = secondsLeft % 60
 
 
-        Column(
+    Column(
+        modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
+    ) {
+        Text(
+            text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
-                .fillMaxWidth()
-                    ,
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-            )
-        }
+        )
     }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -354,8 +335,7 @@ fun ImageOptionsBottomSheet(
 ) {
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = rememberModalBottomSheetState()
+            onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()
         ) {
             Column(
                 modifier = Modifier
@@ -370,13 +350,14 @@ fun ImageOptionsBottomSheet(
                 Button(
                     onClick = {
                         // Retake photo
-                        when (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)) {
+                        when (ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        )) {
                             PackageManager.PERMISSION_GRANTED -> pictureViewModel.takePicture()
                             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                         onDismiss()
-                    },
-                    modifier = Modifier
+                    }, modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
                 ) {

@@ -26,13 +26,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.*
-import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import java.time.LocalDate
 import java.time.YearMonth
@@ -40,7 +38,6 @@ import java.time.format.TextStyle
 import java.util.*
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
-
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.data.RecurringTask
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
@@ -186,20 +183,20 @@ fun PlanScreen(
                     // Horizontal calendar provided by the Calendar open source library
                     HorizontalCalendar(
                         state = state, dayContent = { day ->
-                            Day(
-                                day = day, isSelected = selectedDate == day.date, onClick = {
-                                    selectedDate = it.date
-                                    coroutineScope.launch {
-                                        calendarSheetState.hide()
-                                    }.invokeOnCompletion {
-                                        if (!calendarSheetState.isVisible) {
-                                            showCalendarSheet = false
-                                        }
+                        Day(
+                            day = day, isSelected = selectedDate == day.date, onClick = {
+                                selectedDate = it.date
+                                coroutineScope.launch {
+                                    calendarSheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!calendarSheetState.isVisible) {
+                                        showCalendarSheet = false
                                     }
-                                })
-                        }, monthHeader = {
-                            MonthHeader(daysOfWeek = daysOfWeek)
-                        }, modifier = Modifier.fillMaxWidth()
+                                }
+                            })
+                    }, monthHeader = {
+                        MonthHeader(daysOfWeek = daysOfWeek)
+                    }, modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -241,8 +238,7 @@ private fun SimpleCalendarTitle(
         // month in the middle
         Text(
             text = currentMonth.month.getDisplayName(
-                TextStyle.FULL,
-                Locale.getDefault()
+                TextStyle.FULL, Locale.getDefault()
             ) + " ${currentMonth.year}",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface

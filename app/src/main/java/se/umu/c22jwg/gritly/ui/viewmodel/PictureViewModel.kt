@@ -18,7 +18,6 @@ import java.io.File
 import java.io.IOException
 import java.time.LocalDate
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.exifinterface.media.ExifInterface
 import java.io.FileInputStream
 

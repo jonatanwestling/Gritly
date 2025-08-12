@@ -1,8 +1,6 @@
 package se.umu.c22jwg.gritly.ui.screens
 
 import android.annotation.SuppressLint
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -25,9 +22,6 @@ import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import se.umu.c22jwg.gritly.utils.cleanDate
 import java.io.File
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
 import androidx.compose.runtime.livedata.observeAsState
 
 /**

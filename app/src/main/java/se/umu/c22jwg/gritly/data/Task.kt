@@ -11,7 +11,7 @@ data class Task(
 
     val title: String,
 
-    val date: String, // ISO format, e.g., "2024-06-07"
+    val date: String,
 
     val description: String? = null,
 

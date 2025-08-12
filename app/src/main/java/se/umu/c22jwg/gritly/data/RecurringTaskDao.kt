@@ -1,5 +1,4 @@
 package se.umu.c22jwg.gritly.data
-import androidx.compose.runtime.snapshots.SnapshotId
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 

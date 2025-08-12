@@ -9,9 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import se.umu.c22jwg.gritly.ui.screens.MainScreen
 import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
