@@ -119,6 +119,7 @@ fun PlanScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // add the selected date and icon to the "button"j
                     Text(
                         text = "Selected: ${cleanDate(selectedDate.toString())}",
                         style = MaterialTheme.typography.titleMedium,
@@ -132,12 +133,12 @@ fun PlanScreen(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            // Show planned recurring tasks and normal tasks for selected date
+            // show planned recurring tasks and normal tasks for selected date
             UnifiedPlannedTasksList(
                 taskViewModel = taskViewModel, selectedDate = selectedDate.toString()
             )
         }
-        // AddTaskBottomSheet component
+        // bottom sheet for adding a task
         AddTaskBottomSheet(
             showBottomSheet = showBottomSheet,
             onDismiss = { showBottomSheet = false },
@@ -145,7 +146,7 @@ fun PlanScreen(
             title = "Add new task",
             selectedDate = selectedDate.toString()
         )
-        // Calendar BottomSheet
+        // calendar BottomSheet
         if (showCalendarSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showCalendarSheet = false }, sheetState = calendarSheetState
@@ -156,7 +157,7 @@ fun PlanScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        "Select Date",
+                        "Select a date to plan",
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )

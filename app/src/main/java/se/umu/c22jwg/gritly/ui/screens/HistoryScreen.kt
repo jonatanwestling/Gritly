@@ -1,6 +1,7 @@
 package se.umu.c22jwg.gritly.ui.screens
 
 import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,10 +19,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import se.umu.c22jwg.gritly.utils.cleanDate
+import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -52,6 +55,7 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
     val tasksByDate = remember(allTasks) {
         allTasks.groupBy { it.date }
     }
+
 
     Scaffold {
         LazyColumn(
@@ -111,17 +115,15 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
                             }
                         }
                         // show the image if the bitmap is not null
-                        bitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Captured daily image ",
-                                modifier = Modifier
-                                    .size(134.dp)
-                                    // rounded corners for aesthetics
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                        if (entry.imagePath != null)
+                        AsyncImage(
+                            model = File(entry.imagePath),
+                            contentDescription = "Daily photo",
+                            modifier = Modifier
+                                .size(134.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
             }

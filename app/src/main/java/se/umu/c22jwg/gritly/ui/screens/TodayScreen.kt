@@ -272,7 +272,7 @@ fun ProgressBar(tasks: List<Task>,  pictureViewModel: PictureViewModel,  context
                     modifier = Modifier
                         .weight(1f)
                         .heightIn(min = 100.dp),
-                    placeholder = { Text("Enter notes and take a photo here...") },
+                    placeholder = { Text("Enter notes and take a photo of your day here...") },
                     maxLines = Int.MAX_VALUE,
                     singleLine = false
                 )
