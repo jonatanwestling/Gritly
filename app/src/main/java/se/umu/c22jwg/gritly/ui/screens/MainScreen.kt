@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.navigation.compose.NavHost
-import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
+import se.umu.c22jwg.gritly.ui.viewmodel.DailyViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 
 /**
@@ -37,10 +37,10 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
  * It sets up the navigation structure and displays different screens based on user interaction.
  *
  * @param taskViewModel The ViewModel that provides the task data and handles task operations.
- * @param pictureViewModel The ViewModel that handles the daily entries with pictures and comments.
+ * @param dailyViewModel The ViewModel that handles the daily entries with pictures and comments.
  */
 @Composable
-fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel) {
+fun MainScreen(taskViewModel: TaskViewModel, dailyViewModel: DailyViewModel) {
     val navController = rememberNavController()
 
     val items = listOf(Screen.Today, Screen.AddGoal, Screen.History)
@@ -85,9 +85,9 @@ fun MainScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel)
             Modifier.padding(innerPadding)
         ) {
             // composable functions for each screen provided with necessary ViewModels
-            composable(Screen.Today.route) { TodayScreen(taskViewModel, pictureViewModel) }
+            composable(Screen.Today.route) { TodayScreen(taskViewModel, dailyViewModel) }
             composable(Screen.AddGoal.route) { PlanScreen(taskViewModel) }
-            composable(Screen.History.route) { HistoryScreen(taskViewModel, pictureViewModel) }
+            composable(Screen.History.route) { HistoryScreen(taskViewModel, dailyViewModel) }
         }
     }
 }

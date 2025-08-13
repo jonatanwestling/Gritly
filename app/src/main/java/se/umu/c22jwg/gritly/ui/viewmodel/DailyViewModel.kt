@@ -1,5 +1,4 @@
 package se.umu.c22jwg.gritly.ui.viewmodel
-// File: PictureViewModel.kt
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -19,9 +18,11 @@ import java.io.IOException
 import java.time.LocalDate
 import androidx.compose.runtime.State
 import androidx.exifinterface.media.ExifInterface
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import java.io.FileInputStream
 
-class PictureViewModel(app: Application, private val state: SavedStateHandle) : AndroidViewModel(app) {
+class DailyViewModel(app: Application, private val state: SavedStateHandle) : AndroidViewModel(app) {
 
     private val database = DatabaseProvider.getDatabase(app)
     private val dailyEntryRepository = DailyEntryRepository(database.dailyEntryDao())
@@ -51,8 +52,8 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
     private val _noteForToday = mutableStateOf<String>("")
     val noteForToday: State<String> = _noteForToday
 
-    private val _allEntries = mutableStateOf<List<DailyEntry>>(emptyList())
-    val allEntries: State<List<DailyEntry>> = _allEntries
+    private val _allEntries = MutableLiveData<List<DailyEntry>>(emptyList())
+    val allEntries: LiveData<List<DailyEntry>> = _allEntries
 
     fun loadAllEntries() {
         viewModelScope.launch {
@@ -138,7 +139,7 @@ class PictureViewModel(app: Application, private val state: SavedStateHandle) : 
                     imagePath =  existingEntry?.imagePath ?: ""
                 )
             )
-            //Log.d("PictureViewModel", "Note updated for $today: $note")
+            //Log.d("DailyViewModel", "Note updated for $today: $note")
         }
     }
 

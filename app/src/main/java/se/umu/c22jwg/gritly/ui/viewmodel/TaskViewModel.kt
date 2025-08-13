@@ -108,7 +108,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             // and behaves as a normal task.
             createTasksFromRecurringTasks(today)
 
-            // Flow ist for function
             taskRepository.getAllTasks.collect { taskList ->
                 val todayTasks = taskList
                     .filter { it.date == today }
@@ -163,21 +162,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-    /**
-     * Refreshes today's tasks
-     */
-    fun refreshTodayTasks() {
-        loadTodayTasks()
-    }
-
-    /**
-     * Refreshes all tasks
-     */
-    fun refreshAllTasks() {
-        loadAllTasks()
-    }
-
     /**
      * Adds a new normal task to the database
      *
@@ -220,14 +204,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * Updates an existing task
-     */
-    fun updateTask(task: Task) {
-        viewModelScope.launch {
-            taskRepository.updateTask(task)
-        }
-    }
 
     /**
      * Deletes a task and its associated recurring task if applicable
@@ -263,30 +239,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             val updatedTask = task.copy(isCompleted = !task.isCompleted)
             taskRepository.updateTask(updatedTask)
         }
-    }
-
-    /**
-     * Gets a specific task by its ID
-     *
-     * @param id the id of the task
-     * @return Task if there is any found
-     */
-    fun getTaskById(id: Long): Task? {
-        return _allTasks.value.find { it.id == id }
-    }
-
-    /**
-     * Gets tasks for a specific date
-     *
-     * @param date a specific date to get all tasks from
-     * @return A list of tasks that are planned on that date
-     */
-    fun getTasksForDate(date: String): List<Task> {
-        return _allTasks.value.filter { it.date == date }
-    }
-
-    fun getRecurringTasksForDate(date: String): List<RecurringTask> {
-        return getRecurringTasksForDate(date, _recurringTasks.value)
     }
 
     /**

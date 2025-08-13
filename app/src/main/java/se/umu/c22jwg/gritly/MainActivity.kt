@@ -15,13 +15,13 @@ import se.umu.c22jwg.gritly.ui.screens.MainScreen
 import se.umu.c22jwg.gritly.ui.theme.GritlyTheme
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
+import se.umu.c22jwg.gritly.ui.viewmodel.DailyViewModel
 import java.io.File
 import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
     private lateinit var file: File
-    private val viewModel: PictureViewModel by viewModels()
+    private val viewModel: DailyViewModel by viewModels()
 
     private val launcher=registerForActivityResult(
         //Use the predefined contract to take the picture
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             GritlyTheme {
                 val taskViewModel: TaskViewModel = viewModel()
-                MainScreen(taskViewModel = taskViewModel, pictureViewModel = viewModel)
+                MainScreen(taskViewModel = taskViewModel, dailyViewModel = viewModel)
             }
         }
 

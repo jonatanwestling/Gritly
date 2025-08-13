@@ -18,11 +18,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import se.umu.c22jwg.gritly.data.Task
-import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
+import se.umu.c22jwg.gritly.ui.viewmodel.DailyViewModel
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 import se.umu.c22jwg.gritly.utils.cleanDate
 import java.io.File
 import androidx.compose.runtime.livedata.observeAsState
+import java.time.LocalDate
 
 /**
  * HistoryScreen is a composable function that displays a feed of past daily entries with their
@@ -30,25 +31,28 @@ import androidx.compose.runtime.livedata.observeAsState
  * with detailed task information when a card is clicked.
  *
  * @param taskViewModel The ViewModel that provides the task data and handles task operations.
- * @param pictureViewModel The ViewModel that handles the daily entries and pictures.
+ * @param dailyViewModel The ViewModel that handles the daily entries and pictures.
  */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewModel) {
-    val entries by pictureViewModel.allEntries
-    val bitmap by pictureViewModel.bitmap
+fun HistoryScreen(taskViewModel: TaskViewModel, dailyViewModel: DailyViewModel) {
+    val today = LocalDate.now().toString()
+    val entries by dailyViewModel.allEntries.observeAsState(emptyList())
+    val pastEntries = entries.filter { it.date != today }
+
     val allTasks by taskViewModel.allTasks.observeAsState(emptyList())
     // state variables for the bottom sheet
     var selectedDateForSheet by remember { mutableStateOf<String?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }
     // load all daily entries when the screen is launched
     LaunchedEffect(Unit) {
-        pictureViewModel.loadAllEntries()
+        dailyViewModel.loadAllEntries()
     }
 
-    // group tasks by date
+    // group tasks by date and filter out today's tasks
     val tasksByDate = remember(allTasks) {
-        allTasks.groupBy { it.date }
+        allTasks.filter {it.date != LocalDate.now().toString() }
+            .groupBy { it.date }
     }
 
 
@@ -58,7 +62,7 @@ fun HistoryScreen(taskViewModel: TaskViewModel, pictureViewModel: PictureViewMod
             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(entries) { entry ->
+            items(pastEntries) { entry ->
 
                 val tasksForThisDate = tasksByDate[entry.date] ?: emptyList()
                 val totalTasks = tasksForThisDate.size

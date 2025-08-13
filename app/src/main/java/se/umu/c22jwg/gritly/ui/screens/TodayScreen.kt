@@ -38,7 +38,7 @@ import se.umu.c22jwg.gritly.data.Task
 import se.umu.c22jwg.gritly.ui.components.AddTaskBottomSheet
 import java.time.LocalDate
 import kotlinx.coroutines.delay
-import se.umu.c22jwg.gritly.ui.viewmodel.PictureViewModel
+import se.umu.c22jwg.gritly.ui.viewmodel.DailyViewModel
 import java.time.LocalTime
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TodayScreen(
     taskViewModel: TaskViewModel,
-    pictureViewModel: PictureViewModel,
+    dailyViewModel: DailyViewModel,
     modifier: Modifier = Modifier,
 ) {
 
@@ -78,7 +78,7 @@ fun TodayScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            pictureViewModel.takePicture()
+            dailyViewModel.takePicture()
         } else {
             Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
@@ -96,7 +96,7 @@ fun TodayScreen(
         ) {
             ProgressBar(
                 todayTasks,
-                pictureViewModel,
+                dailyViewModel,
                 context,
                 permissionLauncher,
                 { showImageOptionsSheet = true })
@@ -134,7 +134,7 @@ fun TodayScreen(
         ImageOptionsBottomSheet(
             showBottomSheet = showImageOptionsSheet,
             onDismiss = { showImageOptionsSheet = false },
-            pictureViewModel = pictureViewModel,
+            dailyViewModel = dailyViewModel,
             context = context,
             permissionLauncher = permissionLauncher
         )
@@ -184,7 +184,7 @@ fun TaskRow(
 @Composable
 fun ProgressBar(
     tasks: List<Task>,
-    pictureViewModel: PictureViewModel,
+    dailyViewModel: DailyViewModel,
     context: android.content.Context,
     permissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
     onImageClick: () -> Unit
@@ -193,13 +193,13 @@ fun ProgressBar(
     val total = tasks.size
     val progress = if (total > 0) completed / total.toFloat() else 0f
     var dayText by rememberSaveable { mutableStateOf("") }
-    val savedDayText by pictureViewModel.noteForToday
-    val bitmap by pictureViewModel.bitmap
+    val savedDayText by dailyViewModel.noteForToday
+    val bitmap by dailyViewModel.bitmap
     val coroutineScope = rememberCoroutineScope()
 
     // Load existing note
     LaunchedEffect(Unit) {
-        pictureViewModel.loadNoteForToday()
+        dailyViewModel.loadNoteForToday()
     }
 
     LaunchedEffect(savedDayText) {
@@ -248,7 +248,7 @@ fun ProgressBar(
                             dayText = newText
                             coroutineScope.launch {
                                 delay(2000)
-                                pictureViewModel.updateNoteForToday(newText)
+                                dailyViewModel.updateNoteForToday(newText)
                             }
                         }
                     },
@@ -278,7 +278,7 @@ fun ProgressBar(
                         when (ContextCompat.checkSelfPermission(
                             context, Manifest.permission.CAMERA
                         )) {
-                            PackageManager.PERMISSION_GRANTED -> pictureViewModel.takePicture()
+                            PackageManager.PERMISSION_GRANTED -> dailyViewModel.takePicture()
                             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                     }, modifier = Modifier
@@ -329,7 +329,7 @@ fun TimeLeftInDayCounter() {
 fun ImageOptionsBottomSheet(
     showBottomSheet: Boolean,
     onDismiss: () -> Unit,
-    pictureViewModel: PictureViewModel,
+    dailyViewModel: DailyViewModel,
     context: android.content.Context,
     permissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
 ) {
@@ -353,7 +353,7 @@ fun ImageOptionsBottomSheet(
                         when (ContextCompat.checkSelfPermission(
                             context, Manifest.permission.CAMERA
                         )) {
-                            PackageManager.PERMISSION_GRANTED -> pictureViewModel.takePicture()
+                            PackageManager.PERMISSION_GRANTED -> dailyViewModel.takePicture()
                             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                         onDismiss()
@@ -366,7 +366,7 @@ fun ImageOptionsBottomSheet(
                 Button(
                     onClick = {
                         // Delete photo
-                        pictureViewModel.clearImage()
+                        dailyViewModel.clearImage()
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
