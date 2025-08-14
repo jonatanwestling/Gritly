@@ -45,14 +45,7 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
 
-    // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
-    // See Add the KSP plugin to your project
     ksp("androidx.room:room-compiler:$room_version")
-
-    // Hilt for dependency injection
-    implementation("com.google.dagger:hilt-android:2.48")
-    ksp("com.google.dagger:hilt-android-compiler:2.48")
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     implementation("androidx.compose.runtime:runtime-livedata:1.4.3")
     implementation(libs.androidx.core.ktx)
@@ -61,7 +54,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation("androidx.compose.animation:animation:1.8.3")
-    // The compose calendar library for Android
+    // the compose calendar library from github.com/kizitonwose
     implementation("com.kizitonwose.calendar:compose:2.6.2")
 
     implementation("androidx.exifinterface:exifinterface:1.3.6")
