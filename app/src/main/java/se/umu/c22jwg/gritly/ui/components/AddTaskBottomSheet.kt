@@ -1,11 +1,15 @@
 package se.umu.c22jwg.gritly.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
@@ -21,34 +25,50 @@ fun AddTaskBottomSheet(
     title: String,
     modifier: Modifier = Modifier
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val verticalSpacing = if (isLandscape) 8.dp else 16.dp
+    val bottomSpacing = if (isLandscape) 16.dp else 32.dp
+
+    // Limit bottom sheet width in landscape
+    val sheetModifier = if (isLandscape) {
+        Modifier
+            .fillMaxWidth(0.6f)
+    } else {
+        Modifier
+            .fillMaxWidth()
+    }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
     var taskName by rememberSaveable { mutableStateOf("") }
     var isRecurring by rememberSaveable { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-    var weekDaysSelected by rememberSaveable {
-        mutableStateOf(List(7) { true}) // default 0000000
-    }
+    var weekDaysSelected by rememberSaveable { mutableStateOf(List(7) { true }) } // default all days selected
 
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = onDismiss,
-            sheetState = sheetState
+            sheetState = sheetState,
+            modifier = sheetModifier
         ) {
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
                 Text(title, style = MaterialTheme.typography.titleLarge)
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(verticalSpacing))
                 TextField(
                     value = taskName,
                     onValueChange = { taskName = it },
                     label = { Text("Task name") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(16.dp))
-                
+                Spacer(Modifier.height(verticalSpacing))
                 // Recurring task switch
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -64,7 +84,7 @@ fun AddTaskBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = if (isRecurring) "Task will repeat every day" else "Task will only appear once",
+                            text = if (isRecurring) "Task will repeat on selected days" else "Task will only appear once",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
@@ -75,7 +95,7 @@ fun AddTaskBottomSheet(
                     )
                 }
                 if (isRecurring) {
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(verticalSpacing))
                     Text("Repeat on", style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(8.dp))
                     Row(
@@ -88,17 +108,15 @@ fun AddTaskBottomSheet(
                             FilterChip(
                                 selected = selected,
                                 onClick = {
-                                    weekDaysSelected = weekDaysSelected.toMutableList().also {
-                                        it[i] = !it[i]
-                                    }
+                                    weekDaysSelected = weekDaysSelected.toMutableList().also { it[i] = !it[i] }
                                 },
-                                label = { Text(dayLabels[i]) }
+                                label = { Text(dayLabels[i]) },
+                                modifier = Modifier.padding(end = 4.dp)
                             )
                         }
                     }
                 }
-                
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(bottomSpacing))
                 Button(
                     onClick = {
                         if (taskName.isNotBlank()) {
@@ -127,7 +145,6 @@ fun AddTaskBottomSheet(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    // only enable if user have provided a name and selected at least one day if recurring task
                     enabled = taskName.isNotBlank() && ((weekDaysSelected.contains(true) && isRecurring) || !isRecurring)
                 ) {
                     Text("Add Task")
@@ -135,4 +152,4 @@ fun AddTaskBottomSheet(
             }
         }
     }
-} 
+}
