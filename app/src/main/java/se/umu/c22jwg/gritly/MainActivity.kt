@@ -63,18 +63,6 @@ class MainActivity : ComponentActivity() {
         viewModel.file = file
     }
 
-    private fun takePicture() {
-
-        /* Setup an uri to the file. A File provider is used so that the Camera app can have access
-         * to the location (in our local storage)we provide
-         */
-        val uri: Uri
-
-        uri = FileProvider.getUriForFile(applicationContext, "$packageName.fileprovider", file)
-
-        //Start the camera Activity
-        launcher.launch(uri)
-    }
 }
 
 @Preview(showBackground = true)

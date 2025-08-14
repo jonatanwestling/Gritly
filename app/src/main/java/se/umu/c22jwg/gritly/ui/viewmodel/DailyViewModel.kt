@@ -69,9 +69,6 @@ class DailyViewModel(app: Application, private val state: SavedStateHandle) : An
     fun takePicture() {
         takePictureLauncher?.invoke()
     }
-    fun hasPicture(): Boolean {
-        return file.exists() && file.length() > 0
-    }
 
     fun onPhotoTaken() {
         viewModelScope.launch {
