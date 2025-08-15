@@ -57,75 +57,82 @@ fun HistoryScreen(taskViewModel: TaskViewModel, dailyViewModel: DailyViewModel) 
 
 
     Scaffold {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(pastEntries) { entry ->
+        if (!pastEntries.isEmpty()){
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(pastEntries) { entry ->
 
-                val tasksForThisDate = tasksByDate[entry.date] ?: emptyList()
-                val totalTasks = tasksForThisDate.size
-                val completedTasks = tasksForThisDate.count { it.isCompleted }
-                // calculate the percentage of completed tasks
-                val percentCompleted =
-                    if (totalTasks > 0) (completedTasks * 100 / totalTasks) else 0
+                    val tasksForThisDate = tasksByDate[entry.date] ?: emptyList()
+                    val totalTasks = tasksForThisDate.size
+                    val completedTasks = tasksForThisDate.count { it.isCompleted }
+                    // calculate the percentage of completed tasks
+                    val percentCompleted =
+                        if (totalTasks > 0) (completedTasks * 100 / totalTasks) else 0
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            selectedDateForSheet = entry.date
-                            showBottomSheet = true
-                        },
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                ) {
-                    Row(
+                    Card(
                         modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxWidth()
+                            .clickable {
+                                selectedDateForSheet = entry.date
+                                showBottomSheet = true
+                            },
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                     ) {
-                        Column(
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 16.dp)
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = cleanDate(entry.date),
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Completed: $percentCompleted% ($completedTasks / $totalTasks)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-                            // show note just if it is not empty
-                            if (entry.note.isNotBlank()) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 16.dp)
+                            ) {
                                 Text(
-                                    text = entry.note,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = cleanDate(entry.date),
+                                    style = MaterialTheme.typography.titleLarge,
                                 )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Completed: $percentCompleted% ($completedTasks / $totalTasks)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                // show note just if it is not empty
+                                if (entry.note.isNotBlank()) {
+                                    Text(
+                                        text = entry.note,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
                             }
+                            // show the image if the bitmap is not null
+                            if (entry.imagePath != null)
+                                AsyncImage(
+                                    model = File(entry.imagePath),
+                                    contentDescription = "Daily photo",
+                                    modifier = Modifier
+                                        .size(134.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
                         }
-                        // show the image if the bitmap is not null
-                        if (entry.imagePath != null)
-                        AsyncImage(
-                            model = File(entry.imagePath),
-                            contentDescription = "Daily photo",
-                            modifier = Modifier
-                                .size(134.dp)
-                                .clip(RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop
-                        )
                     }
                 }
             }
+        } else {
+            Text(
+                "Your history is waiting… 📖 Start planning and completing tasks to see it come alive!",
+                modifier = Modifier.padding(16.dp)
+            )
         }
         if (showBottomSheet) {
             TaskBottomSheet(
