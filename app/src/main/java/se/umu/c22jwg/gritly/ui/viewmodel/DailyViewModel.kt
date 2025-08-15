@@ -22,6 +22,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import java.io.FileInputStream
 
+/**
+ * DailyViewModel is responsible for managing daily entries in the Gritly application.
+ * It handles the interaction with the model layer, providing a clean API for the UI to access
+ * and modify daily entry data, including photos and notes. It uses Kotlin Coroutines and LiveData
+ * to handle asynchronous data operations and state management.
+ *
+ * @param app The application context, used to initialize the Room database.
+ * @param state The SavedStateHandle to persist the state across configuration changes.
+ */
 class DailyViewModel(app: Application, private val state: SavedStateHandle) : AndroidViewModel(app) {
 
     private val database = DatabaseProvider.getDatabase(app)

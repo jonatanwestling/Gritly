@@ -14,20 +14,12 @@ import se.umu.c22jwg.gritly.data.TaskRepository
 import java.time.LocalDate
 
 /**
- * ViewModel for managing tasks and recurring tasks in the Gritly application.
- * This ViewModel handles the interaction with the Room database, providing a clean API for the UI to access and modify task data.
- * It uses Kotlin Coroutines and Flow to handle asynchronous data operations and state management.
+ * TaskViewModel is responsible for managing tasks and recurring tasks in the Gritly application.
+ * This ViewModel handles the interaction with the model layer, providing a clean API for the UI to
+ * access and modify task data. It uses Kotlin Coroutines and live data to handle asynchronous data
+ * operations and state management.
  *
  * @param application The application context, used to initialize the Room database.
- *
- * This ViewModel is responsible for:
- * - Loading and managing tasks and recurring tasks from the database.
- * - Providing state flows for all tasks, today's tasks, completed tasks, and recurring tasks.
- * - Allowing the UI to set a selected date for planning tasks.
- * - Adding, updating, and deleting tasks and recurring tasks.
- * - Creating tasks from recurring tasks for a specific date.
- * - Toggling task completion status.
- * - Filtering tasks based on the selected date.
  */
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
 

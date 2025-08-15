@@ -14,7 +14,19 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
 
-
+/**
+ * AddTaskBottomSheet is a composable function that displays a bottom sheet for adding new tasks.
+ * It allows users to enter a task name, choose whether the task is recurring, and select the days
+ * on which the task should repeat. The bottom sheet can be dismissed and will call the provided
+ * onDismiss callback when closed.
+ *
+ * @param showBottomSheet Boolean to control the visibility of the bottom sheet.
+ * @param onDismiss Callback function to be called when the bottom sheet is dismissed.
+ * @param taskViewModel ViewModel for managing tasks.
+ * @param selectedDate The date for which the task is being added.
+ * @param title Title to display at the top of the bottom sheet.
+ * @param modifier Modifier for styling and layout purposes.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskBottomSheet(
