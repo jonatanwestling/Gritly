@@ -1,5 +1,6 @@
 package se.umu.c22jwg.gritly.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -9,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.navigation.compose.NavHost
@@ -49,9 +51,13 @@ fun MainScreen(taskViewModel: TaskViewModel, dailyViewModel: DailyViewModel) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val currentScreen = items.find { it.route == currentRoute } ?: Screen.Today
+    val configuration = LocalConfiguration.current
+    val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
     Scaffold(topBar = {
         // simple top bar to display the current title of the screen
+        // we dont have space for this in landscape mode
+        if (isPortrait)
         GritlyTopBar(title = currentScreen.label)
     }, bottomBar = {
         // bottom navigation bar that allows users to switch between different screens
