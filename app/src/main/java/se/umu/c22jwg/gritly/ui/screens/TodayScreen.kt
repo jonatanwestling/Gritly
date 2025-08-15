@@ -42,13 +42,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
 
+/**
+ * TodayScreen displays the tasks for today, allowing the user to mark tasks as completed,
+ * add new tasks, and view progress for the day. The user can also take a photo and add some notes
+ * for the day.
+ *
+ * @param taskViewModel The ViewModel that provides the task data and handles task operations.
+ * @param dailyViewModel The ViewModel that handles the daily entries with pictures and comments.
+ */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
     taskViewModel: TaskViewModel,
     dailyViewModel: DailyViewModel,
-    modifier: Modifier = Modifier,
 ) {
     val today = LocalDate.now().toString()
     val todayTasks by taskViewModel.todayTasks.observeAsState(emptyList())
@@ -57,9 +64,8 @@ fun TodayScreen(
     var showBottomSheet by remember { mutableStateOf(false) }
     var showImageOptionsSheet by remember { mutableStateOf(false) }
 
-    // Check camera permission
     val context = LocalContext.current
-    val cameraPermission = Manifest.permission.CAMERA
+    // request permission to use the camera
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -70,26 +76,21 @@ fun TodayScreen(
         }
     }
 
-    // Detect orientation
+    // detect orientation
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Scaffold(
-        modifier = modifier,
         floatingActionButton = {
             FloatingActionButton(onClick = { showBottomSheet = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
-        }
-    ) { innerPadding ->
+        }) { innerPadding ->
+        // in laandscape we put the progressbar to the left and tasks to the right
         if (isLandscape) {
-            // Landscape layout: ProgressBar and TaskList side by side
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             ) {
-                // ProgressBar takes half the width
                 ProgressBar(
                     tasks = todayTasks,
                     dailyViewModel = dailyViewModel,
@@ -100,27 +101,21 @@ fun TodayScreen(
                         .weight(1f)
                         .padding(8.dp)
                 )
-                // Task list takes the other half
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(8.dp),
-                    state = listState
+                        .padding(8.dp), state = listState
                 ) {
                     items(todayTasks, key = { it.id }) { task ->
                         TaskRow(
-                            task = task,
-                            modifier = Modifier.animateItem(),
-                            onToggle = {
+                            task = task, modifier = Modifier.animateItem(), onToggle = {
                                 scrollToTop = true
                                 taskViewModel.toggleTaskCompletion(task)
-                            }
-                        )
+                            })
                     }
                 }
             }
         } else {
-            // Portrait layout: Stack ProgressBar and TaskList vertically
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -137,24 +132,20 @@ fun TodayScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    state = listState
+                        .padding(horizontal = 16.dp), state = listState
                 ) {
                     items(todayTasks, key = { it.id }) { task ->
                         TaskRow(
-                            task = task,
-                            modifier = Modifier.animateItem(),
-                            onToggle = {
+                            task = task, modifier = Modifier.animateItem(), onToggle = {
                                 scrollToTop = true
                                 taskViewModel.toggleTaskCompletion(task)
-                            }
-                        )
+                            })
                     }
                 }
             }
         }
 
-        // Scroll to top after list updates when a task is marked as done
+        // scroll to top after list updates when a task is marked as done
         LaunchedEffect(todayTasks) {
             if (scrollToTop) {
                 listState.animateScrollToItem(0)
@@ -162,7 +153,6 @@ fun TodayScreen(
             }
         }
 
-        // AddTaskBottomSheet component
         AddTaskBottomSheet(
             showBottomSheet = showBottomSheet,
             onDismiss = { showBottomSheet = false },
@@ -171,7 +161,6 @@ fun TodayScreen(
             selectedDate = today
         )
 
-        // ImageOptionsBottomSheet component
         ImageOptionsBottomSheet(
             showBottomSheet = showImageOptionsSheet,
             onDismiss = { showImageOptionsSheet = false },
@@ -182,13 +171,19 @@ fun TodayScreen(
     }
 }
 
+/**
+ * TaskRow displays a single task with a checkbox to mark it as completed,
+ * the task title, and an icon if the task is recurring.
+ *
+ * @param task The Task object to display.
+ * @param modifier Modifier to apply to the row for animate item.
+ * @param onToggle Callback invoked when the checkbox is toggled.
+ */
 @Composable
 fun TaskRow(
-    task: Task,
-    modifier: Modifier = Modifier,
-    onToggle: () -> Unit
+    task: Task, modifier: Modifier = Modifier, onToggle: () -> Unit
 ) {
-    // Detect orientation to adjust padding
+    // detect orientation to adjust padding
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val padding = if (isLandscape) 4.dp else 8.dp
@@ -202,9 +197,7 @@ fun TaskRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = task.isCompleted,
-            onCheckedChange = { onToggle() }
-        )
+            checked = task.isCompleted, onCheckedChange = { onToggle() })
         Text(
             text = task.title,
             modifier = Modifier
@@ -222,6 +215,18 @@ fun TaskRow(
     }
 }
 
+/**
+ * ProgressBar displays the progress of tasks for today, including a linear progress indicator and
+ * additionally a text field for notes, and an image button to take a photo of the day.
+ * It also includes a time counter showing the time left in the day.
+ *
+ * @param tasks The list of tasks for today.
+ * @param dailyViewModel The ViewModel that handles the daily entries with pictures and comments.
+ * @param context The current context for permission requests and toasts.
+ * @param permissionLauncher The launcher for requesting camera permissions.
+ * @param onImageClick Callback invoked when the image is clicked to show options.
+ * @param modifier Modifier to apply to the card.
+ */
 @Composable
 fun ProgressBar(
     tasks: List<Task>,
@@ -231,9 +236,6 @@ fun ProgressBar(
     onImageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
     val completed = tasks.count { it.isCompleted }
     val total = tasks.size
     val progress = if (total > 0) completed / total.toFloat() else 0f
@@ -242,74 +244,69 @@ fun ProgressBar(
     val bitmap by dailyViewModel.bitmap
     val coroutineScope = rememberCoroutineScope()
 
-    // Load existing note
+    // load existing note
     LaunchedEffect(Unit) {
         dailyViewModel.loadNoteForToday()
     }
+    // update dayText when savedDayText changes
     LaunchedEffect(savedDayText) {
         dayText = savedDayText
     }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(max = if (isLandscape) 300.dp else 170.dp), // Increase height in landscape
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        if (isLandscape) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
+                Text(text = "$completed/$total tasks completed")
+                TimeLeftInDayCounter()
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            // progress bar under the text and time left counter
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = ProgressIndicatorDefaults.linearColor,
+                trackColor = ProgressIndicatorDefaults.linearTrackColor
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            // text field for notes and image button to take a photo under the progress bar
+            Row(
+                modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextField(
+                    value = dayText,
+                    onValueChange = { newText ->
+                        dayText = newText
+                        // slight delay to avoid database write on every keystroke
+                        coroutineScope.launch {
+                            delay(2000)
+                            dailyViewModel.updateNoteForToday(newText)
+                        }
+                    },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "$completed/$total tasks completed")
-                        TimeLeftInDayCounter()
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = ProgressIndicatorDefaults.linearColor,
-                        trackColor = ProgressIndicatorDefaults.linearTrackColor
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
-                        value = dayText,
-                        onValueChange = { newText ->
-                            val lines = newText.count { it == '\n' } + 1
-                            if (lines <= 5) {
-                                dayText = newText
-                                coroutineScope.launch {
-                                    delay(2000)
-                                    dailyViewModel.updateNoteForToday(newText)
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 100.dp),
-                        placeholder = { Text("Enter notes here...") },
-                        maxLines = 5
-                    )
-                }
-                // Image or camera button
+                        .heightIn(min = 100.dp),
+                    placeholder = { Text("Enter notes and take a photo of your day here...") },
+                    maxLines = 5
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // display taken photo or a button to take a photo
                 bitmap?.let { bmp ->
                     Image(
                         bitmap = bmp.asImageBitmap(),
                         contentDescription = "Captured Image",
                         modifier = Modifier
-                            .size(if (isLandscape) 120.dp else 84.dp)
+                            .size(84.dp)
                             .padding(4.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .clickable { onImageClick() },
@@ -317,93 +314,31 @@ fun ProgressBar(
                     )
                 } ?: Button(
                     onClick = {
-                        when (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)) {
+                        // check for camera permission before taking a picture
+                        when (ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        )) {
+                            // take picture if permission is granted else request permission
                             PackageManager.PERMISSION_GRANTED -> dailyViewModel.takePicture()
                             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
                         }
-                    },
-                    modifier = Modifier
+                    }, modifier = Modifier
                         .padding(4.dp)
-                        .size(80.dp)
+                        .height(64.dp)
                 ) {
                     Icon(Icons.Filled.CameraAlt, contentDescription = "Take Photo")
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "$completed/$total tasks completed")
-                    TimeLeftInDayCounter()
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = ProgressIndicatorDefaults.linearColor,
-                    trackColor = ProgressIndicatorDefaults.linearTrackColor
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = dayText,
-                        onValueChange = { newText ->
-                            val lines = newText.count { it == '\n' } + 1
-                            if (lines <= 5) {
-                                dayText = newText
-                                coroutineScope.launch {
-                                    delay(2000)
-                                    dailyViewModel.updateNoteForToday(newText)
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 100.dp),
-                        placeholder = { Text("Enter notes and take a photo of your day here...") },
-                        maxLines = 5
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    bitmap?.let { bmp ->
-                        Image(
-                            bitmap = bmp.asImageBitmap(),
-                            contentDescription = "Captured Image",
-                            modifier = Modifier
-                                .size(84.dp)
-                                .padding(4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onImageClick() },
-                            contentScale = ContentScale.Crop
-                        )
-                    } ?: Button(
-                        onClick = {
-                            when (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)) {
-                                PackageManager.PERMISSION_GRANTED -> dailyViewModel.takePicture()
-                                else -> permissionLauncher.launch(Manifest.permission.CAMERA)
-                            }
-                        },
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .height(64.dp)
-                    ) {
-                        Icon(Icons.Filled.CameraAlt, contentDescription = "Take Photo")
-                    }
                 }
             }
         }
     }
 }
 
+/**
+ * TimeLeftInDayCounter displays the time left in the current day in HH:MM:SS format. Placed at the
+ * top right corner of the ProgressBar to easily let the user know how much time is left to complete
+ * their tasks for the day.
+ */
+@SuppressLint("DefaultLocale")
 @Composable
 fun TimeLeftInDayCounter() {
     var currentTime by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -413,6 +348,7 @@ fun TimeLeftInDayCounter() {
             delay(1000)
         }
     }
+    // calculate time left in the day
     val now = remember(currentTime) { LocalTime.now() }
     val secondsInDay = 24 * 60 * 60
     val secondsNow = now.toSecondOfDay()
@@ -422,8 +358,7 @@ fun TimeLeftInDayCounter() {
     val seconds = secondsLeft % 60
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.End
+        modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
     ) {
         Text(
             text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
@@ -432,6 +367,16 @@ fun TimeLeftInDayCounter() {
     }
 }
 
+/**
+ * ImageOptionsBottomSheet displays options for the image taken for the day
+ * after a press of the captured image. It allows the user to retake the photo or delete it.
+ *
+ * @param showBottomSheet Boolean to control visibility of the bottom sheet.
+ * @param onDismiss Callback invoked when the bottom sheet is dismissed.
+ * @param dailyViewModel The ViewModel that handles the daily entries with pictures and comments.
+ * @param context The current context for checking permissions.
+ * @param permissionLauncher The launcher for requesting camera permissions.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageOptionsBottomSheet(
@@ -457,7 +402,7 @@ fun ImageOptionsBottomSheet(
                 )
                 Button(
                     onClick = {
-                        // Retake photo
+                        // retake photo, same process as taking a photo
                         when (ContextCompat.checkSelfPermission(
                             context, Manifest.permission.CAMERA
                         )) {
@@ -472,6 +417,7 @@ fun ImageOptionsBottomSheet(
                     Text("Retake")
                 }
                 Button(
+                    // delete the image and clear the bitmap
                     onClick = {
                         dailyViewModel.clearImage()
                         onDismiss()
