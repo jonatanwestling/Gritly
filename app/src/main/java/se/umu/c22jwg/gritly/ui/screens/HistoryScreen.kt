@@ -189,20 +189,20 @@ fun TaskBottomSheet(
  */
 @Composable
 fun TaskRow(task: Task, modifier: Modifier = Modifier) {
-    // Make the text grey so user understand it is disabled
+    // make the text grey so user understand it is disabled
     val textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     Row(
         modifier = modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
             checked = task.isCompleted,
-            // Disable the the interaction with the checkbox
+            // disable the the interaction with the checkbox
             onCheckedChange = null, enabled = false
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = task.title, style = MaterialTheme.typography.bodyLarge.copy(
-                // Display the the text as normal
+                // display the the text as normal
                 textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                 color = textColor
             )
