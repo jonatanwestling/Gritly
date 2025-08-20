@@ -10,6 +10,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import se.umu.c22jwg.gritly.ui.viewmodel.TaskViewModel
@@ -43,7 +45,7 @@ fun AddTaskBottomSheet(
     val verticalSpacing = if (isLandscape) 8.dp else 16.dp
     val bottomSpacing = if (isLandscape) 16.dp else 32.dp
 
-    // Limit bottom sheet width in landscape
+    // limit bottom sheet width in landscape
     val sheetModifier = if (isLandscape) {
         Modifier
             .fillMaxWidth(0.6f)
@@ -57,8 +59,8 @@ fun AddTaskBottomSheet(
 
     var taskName by rememberSaveable { mutableStateOf("") }
     var isRecurring by rememberSaveable { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    var weekDaysSelected by rememberSaveable { mutableStateOf(List(7) { true }) } // default all days selected
+    // default all days selected
+    var weekDaysSelected by rememberSaveable { mutableStateOf(List(7) { true }) }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -81,7 +83,7 @@ fun AddTaskBottomSheet(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(verticalSpacing))
-                // Recurring task switch
+                // recurring task switch
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -133,27 +135,19 @@ fun AddTaskBottomSheet(
                     onClick = {
                         if (taskName.isNotBlank()) {
                             if (isRecurring) {
-                                // Add recurring task for multiple days
                                 taskViewModel.addRecurringTask(
                                     title = taskName,
                                     days = weekDaysSelected
                                 )
                             } else {
-                                // Add single task
                                 taskViewModel.addTask(
                                     title = taskName,
                                     date = selectedDate
                                 )
                             }
-                            coroutineScope.launch {
-                                sheetState.hide()
-                            }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    onDismiss()
-                                    taskName = ""
-                                    isRecurring = false
-                                }
-                            }
+                            onDismiss()
+                            taskName = ""
+                            isRecurring = false
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),

@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,6 +41,8 @@ import se.umu.c22jwg.gritly.ui.viewmodel.DailyViewModel
 import java.time.LocalTime
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import kotlinx.coroutines.launch
 
 /**
@@ -75,99 +78,110 @@ fun TodayScreen(
             Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
     }
+    val focusManager = LocalFocusManager.current
 
     // detect orientation
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showBottomSheet = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
+    // box to enable tapping outside to dismiss the keyboard
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
             }
-        }) { innerPadding ->
-        // in laandscape we put the progressbar to the left and tasks to the right
-        if (isLandscape) {
-            Row(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                ProgressBar(
-                    tasks = todayTasks,
-                    dailyViewModel = dailyViewModel,
-                    context = context,
-                    permissionLauncher = permissionLauncher,
-                    onImageClick = { showImageOptionsSheet = true },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(8.dp)
-                )
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(8.dp), state = listState
+    ) {
+        Scaffold(
+            floatingActionButton = {
+                FloatingActionButton(onClick = { showBottomSheet = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Task")
+                }
+            }) { innerPadding ->
+            // in laandscape we put the progressbar to the left and tasks to the right
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    items(todayTasks, key = { it.id }) { task ->
-                        TaskRow(
-                            task = task, modifier = Modifier.animateItem(), onToggle = {
-                                scrollToTop = true
-                                taskViewModel.toggleTaskCompletion(task)
-                            })
+                    ProgressBar(
+                        tasks = todayTasks,
+                        dailyViewModel = dailyViewModel,
+                        context = context,
+                        permissionLauncher = permissionLauncher,
+                        onImageClick = { showImageOptionsSheet = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)
+                    )
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp), state = listState
+                    ) {
+                        items(todayTasks, key = { it.id }) { task ->
+                            TaskRow(
+                                task = task, modifier = Modifier.animateItem(), onToggle = {
+                                    scrollToTop = true
+                                    taskViewModel.toggleTaskCompletion(task)
+                                })
+                        }
                     }
                 }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                ProgressBar(
-                    tasks = todayTasks,
-                    dailyViewModel = dailyViewModel,
-                    context = context,
-                    permissionLauncher = permissionLauncher,
-                    onImageClick = { showImageOptionsSheet = true },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                LazyColumn(
+            } else {
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp), state = listState
+                        .padding(innerPadding)
                 ) {
-                    items(todayTasks, key = { it.id }) { task ->
-                        TaskRow(
-                            task = task, modifier = Modifier.animateItem(), onToggle = {
-                                scrollToTop = true
-                                taskViewModel.toggleTaskCompletion(task)
-                            })
+                    ProgressBar(
+                        tasks = todayTasks,
+                        dailyViewModel = dailyViewModel,
+                        context = context,
+                        permissionLauncher = permissionLauncher,
+                        onImageClick = { showImageOptionsSheet = true },
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp), state = listState
+                    ) {
+                        items(todayTasks, key = { it.id }) { task ->
+                            TaskRow(
+                                task = task, modifier = Modifier.animateItem(), onToggle = {
+                                    scrollToTop = true
+                                    taskViewModel.toggleTaskCompletion(task)
+                                })
+                        }
                     }
                 }
             }
-        }
 
-        // scroll to top after list updates when a task is marked as done
-        LaunchedEffect(todayTasks) {
-            if (scrollToTop) {
-                listState.animateScrollToItem(0)
-                scrollToTop = false
+            // scroll to top after list updates when a task is marked as done
+            LaunchedEffect(todayTasks) {
+                if (scrollToTop) {
+                    listState.animateScrollToItem(0)
+                    scrollToTop = false
+                }
             }
+
+            AddTaskBottomSheet(
+                showBottomSheet = showBottomSheet,
+                onDismiss = { showBottomSheet = false },
+                taskViewModel = taskViewModel,
+                title = "Add New Task For Today",
+                selectedDate = today
+            )
+
+            ImageOptionsBottomSheet(
+                showBottomSheet = showImageOptionsSheet,
+                onDismiss = { showImageOptionsSheet = false },
+                dailyViewModel = dailyViewModel,
+                context = context,
+                permissionLauncher = permissionLauncher
+            )
         }
-
-        AddTaskBottomSheet(
-            showBottomSheet = showBottomSheet,
-            onDismiss = { showBottomSheet = false },
-            taskViewModel = taskViewModel,
-            title = "Add New Task For Today",
-            selectedDate = today
-        )
-
-        ImageOptionsBottomSheet(
-            showBottomSheet = showImageOptionsSheet,
-            onDismiss = { showImageOptionsSheet = false },
-            dailyViewModel = dailyViewModel,
-            context = context,
-            permissionLauncher = permissionLauncher
-        )
     }
 }
 
@@ -254,7 +268,8 @@ fun ProgressBar(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth()
+            ,
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
