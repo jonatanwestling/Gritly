@@ -31,7 +31,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private val taskRepository = TaskRepository(database.taskDao(), database.recurringTaskDao())
 
     /**
-     * Constructor that loads the initials data.
+     * Initializes the ViewModel by loading all tasks, today's tasks, and recurring tasks.
      */
     init {
         loadAllTasks()
@@ -47,26 +47,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private val _todayTasks = MutableLiveData<List<Task>>(emptyList())
     val todayTasks: LiveData<List<Task>> = _todayTasks
 
-    // state for completed tasks
-    private val _completedTasks = MutableLiveData<List<Task>>(emptyList())
-    val completedTasks: LiveData<List<Task>> = _completedTasks
-
     // state for recurring tasks
     private val _recurringTasks = MutableLiveData<List<RecurringTask>>(emptyList())
     val recurringTasks: LiveData<List<RecurringTask>> = _recurringTasks
 
-    // state for selected date, defaulting to tomorrow (user can only plan for tomorrow or later)
-    private val _selectedDate = MutableLiveData(LocalDate.now().plusDays(1).toString())
-    val selectedDate: LiveData<String> = _selectedDate
-
-    /**
-     * Sets the selected date for planning tasks.
-     * This is used to filter tasks based on the selected date
-     * @param date The date to set as selected, in "yyyy-MM-dd" format.
-     */
-    fun setSelectedDate(date: String) {
-        _selectedDate.value = date
-    }
 
     /**
      * Loads all tasks from database and updates the general task list
@@ -75,14 +59,12 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadAllTasks() {
         viewModelScope.launch {
             val today = LocalDate.now().toString()
-
             taskRepository.getAllTasks.collect { taskList ->
                 val sortedTasks = taskList.sortedWith(
                     compareBy<Task> { it.isCompleted }
                         .thenByDescending { it.id }
                 )
                 _allTasks.value = sortedTasks
-                _completedTasks.value = sortedTasks.filter { it.isCompleted }
                 _todayTasks.value = sortedTasks.filter { it.date == today }
             }
         }
@@ -96,9 +78,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val today = LocalDate.now().toString()
 
-            // create normal tasks from recurring tasks so they can be marked as completed
-            // and behaves as a normal task.
-            createTasksFromRecurringTasks(today)
+
 
             taskRepository.getAllTasks.collect { taskList ->
                 val todayTasks = taskList

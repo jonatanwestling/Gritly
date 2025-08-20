@@ -381,9 +381,7 @@ private fun Day(
 fun PlannedTaskList(
     taskViewModel: TaskViewModel, selectedDate: String, modifier: Modifier = Modifier
 ) {
-    LaunchedEffect(selectedDate) {
-        taskViewModel.setSelectedDate(selectedDate)
-    }
+
     val allTasks by taskViewModel.allTasks.observeAsState(emptyList())
     val recurringTasks by taskViewModel.recurringTasks.observeAsState(emptyList())
     val filteredTasks = allTasks.filter { it.date == selectedDate }
