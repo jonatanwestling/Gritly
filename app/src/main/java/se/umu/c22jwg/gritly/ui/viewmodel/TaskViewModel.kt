@@ -25,14 +25,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = DatabaseProvider.getDatabase(application)
 
-    /**
-     * DAOs for accessing Task and RecurringTask data from the database.
-     */
+    // repository for managing tasks and recurring tasks
     private val taskRepository = TaskRepository(database.taskDao(), database.recurringTaskDao())
 
-    /**
-     * Initializes the ViewModel by loading all tasks, today's tasks, and recurring tasks.
-     */
+    //initializes the ViewModel by loading all tasks, today's tasks, and recurring tasks.
     init {
         loadAllTasks()
         loadTodayTasks()
@@ -60,10 +56,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val today = LocalDate.now().toString()
             taskRepository.getAllTasks.collect { taskList ->
-                val sortedTasks = taskList.sortedWith(
-                    compareBy<Task> { it.isCompleted }
-                        .thenByDescending { it.id }
-                )
+                val sortedTasks =
+                    taskList.sortedWith(compareBy<Task> { it.isCompleted }.thenByDescending { it.id })
                 _allTasks.value = sortedTasks
                 _todayTasks.value = sortedTasks.filter { it.date == today }
             }
@@ -78,15 +72,13 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val today = LocalDate.now().toString()
 
-
+            // create normal tasks from recurring tasks so they can be marked as completed
+            // and behaves as a normal task.
+            createTasksFromRecurringTasks(today)
 
             taskRepository.getAllTasks.collect { taskList ->
-                val todayTasks = taskList
-                    .filter { it.date == today }
-                    .sortedWith(
-                        compareBy<Task> { it.isCompleted }
-                            .thenByDescending { it.id }
-                    )
+                val todayTasks = taskList.filter { it.date == today }
+                    .sortedWith(compareBy<Task> { it.isCompleted }.thenByDescending { it.id })
                 _todayTasks.value = todayTasks
             }
         }
@@ -105,6 +97,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Creates tasks from recurring tasks for the specified date
+     *
+     * @param date The date for which to create tasks in "yyyy-MM-dd" format
      */
     private suspend fun createTasksFromRecurringTasks(date: String) {
         val targetDate = LocalDate.parse(date)
@@ -139,15 +133,11 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      *
      * @param title The title of the task
      * @param date The date for the task in "yyyy-MM-dd" format
-     * @param description (currently not being used)
      */
-    fun addTask(title: String, date: String, description: String? = null) {
+    fun addTask(title: String, date: String) {
         viewModelScope.launch {
             val task = Task(
-                title = title,
-                date = date,
-                description = description,
-                isCompleted = false
+                title = title, date = date, isCompleted = false
             )
             taskRepository.insertTask(task)
         }
@@ -169,8 +159,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             }
             // create the task
             val task = RecurringTask(
-                title = title,
-                weekDays = bitmask
+                title = title, weekDays = bitmask
             )
             taskRepository.insertRecurringTask(task)
         }
@@ -221,8 +210,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
      * @return A list of recurring tasks that is recurring the day specified by the date param
      */
     fun getRecurringTasksForDate(
-        date: String,
-        recurringTasks: List<RecurringTask>
+        date: String, recurringTasks: List<RecurringTask>
     ): List<RecurringTask> {
         val targetDate = LocalDate.parse(date)
         val dayOfWeek = targetDate.dayOfWeek.value

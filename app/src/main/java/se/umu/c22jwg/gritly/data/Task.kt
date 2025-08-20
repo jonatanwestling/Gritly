@@ -13,8 +13,6 @@ data class Task(
 
     val date: String,
 
-    val description: String? = null,
-
     @ColumnInfo(name = "is_completed")
     val isCompleted: Boolean = false,
     // to keep track if it is a recurring task
