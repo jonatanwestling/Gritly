@@ -130,7 +130,7 @@ fun HistoryScreen(taskViewModel: TaskViewModel, dailyViewModel: DailyViewModel) 
             }
         } else {
             Text(
-                "Your history is waiting… 📖 Start planning and completing tasks to see it come alive!",
+                "Your history is waiting… 📖 Start planning and completing tasks and you will begin see the past days here!",
                 modifier = Modifier.padding(16.dp)
             )
         }
