@@ -62,20 +62,23 @@ Database is initialized as a singleton in `DatabaseProvider` to ensure a single 
 
 
 ### Home View
+
 <p align="center">
-  <img src="screenshots/hemvyUtanInfo.png" alt="Home View" width="220" style="margin-right: 20px;"/>
+  <img src="screenshots/hemvyUtanInfo.png" alt="Home View" width="220" style="margin-right: 100px;"/>
   <img src="screenshots/hemvyAdd.png" alt="Add Task Modal" width="220"/>
 </p>
 
 ### Planning View
+
 <p align="center">
-  <img src="screenshots/planvy.png" alt="Planning View" width="220" style="margin-right: 20px;"/>
+  <img src="screenshots/planvy.png" alt="Planning View" width="220" style="margin-right: 100px;"/>
   <img src="screenshots/planvyDate.png" alt="Planning Date Picker" width="220"/>
 </p>
 
 ### History View
+
 <p align="center">
-  <img src="screenshots/history.png" alt="History View" width="220" style="margin-right: 20px;"/>
+  <img src="screenshots/history.png" alt="History View" width="220" style="margin-right: 100px;"/>
   <img src="screenshots/historyDetail.png" alt="History Detail" width="220"/>
 </p>
 
