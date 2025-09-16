@@ -60,11 +60,18 @@ Database is initialized as a singleton in `DatabaseProvider` to ensure a single 
 
 ## Screenshots
 
-- **Home View (Without Note/Photo)**: Shows today's tasks, progress bar, and countdown timer.
-- **Add Task Modal**: Bottom sheet for adding one-time or recurring tasks.
-- **Planning View**: Tasks for tomorrow or selected future date, with calendar picker.
-- **History View**: Cards for past days with stats, notes, and photos.
-- **History Detail Modal**: Non-interactive task list for a selected past day.
+
+### Home View
+<img src="screenshots/hemvyUtanInfo.png" alt="Home View" width="250" style="margin-right:10px;"/>
+<img src="screenshots/hemvyAdd.png" alt="Add Task Modal" width="250"/>
+
+### Planning View
+<img src="screenshots/planvy.png" alt="Planning View" width="250" style="margin-right:10px;"/>
+<img src="screenshots/planvyDate.png" alt="Planning Date Picker" width="250"/>
+
+### History View
+<img src="screenshots/history.png" alt="History View" width="250" style="margin-right:10px;"/>
+<img src="screenshots/historyDetail.png" alt="History Detail" width="250"/>
 
 ## Potential Improvements
 
